@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.currency-tracker" path="/org/gnome/shell/extensions/currency-tracker/">
+    
+    <key name="currency-pair" type="s">
+      <default>'USD-EUR'</default>
+      <summary>Currency pair to track</summary>
+      <description>The currency pair that will be displayed in the panel</description>
+    </key>
+    
+    <key name="refresh-interval" type="i">
+      <default>60</default>
+      <summary>Refresh interval</summary>
+      <description>Time in seconds between updates (30-3600)</description>
+    </key>
+    
+    <key name="show-percentage-change" type="b">
+      <default>true</default>
+      <summary>Show percentage change</summary>
+      <description>Whether to show the percentage change in the panel</description>
+    </key>
+    
+    <key name="show-icon" type="b">
+      <default>true</default>
+      <summary>Show icon</summary>
+      <description>Whether to show the currency icon in the panel</description>
+    </key>
+    
+  </schema>
+</schemalist>

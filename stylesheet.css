@@ -1,0 +1,25 @@
+.currency-tracker-button {
+    -st-icon-style: symbolic;
+    margin-right: 4px;
+    color: inherit;
+}
+.currency-tracker-label {
+    margin: 0 8px;
+}
+.currency-tracker-icon {
+    icon-size: 16px;
+    -st-icon-style: symbolic;
+    margin-right: 4px;
+    color: inherit;
+    opacity: 1 !important;
+    background-color: transparent;
+}
+
+.panel-status-menu-box {
+    spacing: 4px;
+}
+
+/* Koyu tema için */
+.dark .currency-tracker-icon {
+    filter: invert(1);
+}

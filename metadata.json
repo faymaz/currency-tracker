@@ -1,0 +1,23 @@
+{
+    "categories": [
+      "system-monitor",
+      "status-indicators"
+    ],
+    "description": "Track multiple currency pairs including cryptocurrencies",
+    "donations": {
+      "github": "https://github.com/faymaz"
+    },
+    "gettext-domain": "currency-tracker",
+    "stylesheet": "stylesheet.css",
+    "icon": "icons/icon.png",
+    "name": "Currency Tracker",
+    "settings-schema": "org.gnome.shell.extensions.currency-tracker",
+    "shell-version": [
+      "45",
+      "46",
+      "47"
+    ],
+    "url": "https://github.com/faymaz/currency-tracker",
+    "uuid": "currency-tracker@faymaz.github.com",
+    "version": 1
+  }
