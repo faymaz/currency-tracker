@@ -2,7 +2,7 @@
 
 ![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=faymaz.currency-tracker)
 
-A GNOME Shell extension that allows you to track various currency pairs and cryptocurrency rates in real-time.
+A GNOME Shell extension that allows you to track various currency pairs and cryptocurrency rates in real-time. This extension uses the awesomeapi.com.br services to fetch currency rate data.
 
 ![Extension Screenshot 1](img/currency-tracker_1.png)
 ![Extension Screenshot 2](img/currency-tracker_2.png)
