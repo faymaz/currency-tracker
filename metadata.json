@@ -3,7 +3,7 @@
       "system-monitor",
       "status-indicators"
     ],
-    "description": "Track multiple currency pairs including cryptocurrencies",
+    "description": "Track multiple currency pairs including cryptocurrencies. This extension uses awesomeapi.com.br services for currency rate data.",
     "donations": {
       "github": "https://github.com/faymaz"
     },
