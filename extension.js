@@ -15,43 +15,44 @@ import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/ex
 const Indicator = GObject.registerClass(
 class Indicator extends PanelMenu.Button {
     _init(extension) {
-        super._init(0.0, _('Currency Tracker'));
-
+        super._init(0.0, 'Currency Tracker');
+    
         this._extension = extension;
         this._settings = extension.getSettings();
         
-        // Panel box oluşturma
         this._panelBox = new St.BoxLayout({
             style_class: 'panel-status-menu-box'
         });
-
-        // Icon oluşturma
+    
+        // Icon ayarları
         this._icon = new St.Icon({
-            gicon: Gio.Icon.new_for_string(`${extension.path}/icons/icon.svg`),
+            gicon: Gio.Icon.new_for_string(this._extension.path + '/icons/icon.svg'),
             style_class: 'currency-tracker-icon'
         });
-
-        // Label oluşturma
+    
         this._label = new St.Label({
-            text: _('Loading...'),
+            text: 'Loading...',
             y_align: Clutter.ActorAlign.CENTER,
             style_class: 'currency-tracker-label'
         });
-
-        // Panel'e elementleri ekleme
+        
         if (this._settings.get_boolean('show-icon')) {
             this._panelBox.add_child(this._icon);
         }
         this._panelBox.add_child(this._label);
         this.add_child(this._panelBox);
-
-        // Menu oluşturma ve refresh
+        
         this._buildMenu();
         this._refresh();
-
-        // Settings değişikliklerini dinleme
+    
+        // Settings değişikliklerini dinle
         this._settingsChangedId = this._settings.connect('changed::show-icon', () => {
             this._updateIconVisibility();
+        });
+    
+        // Percentage change ayarını dinle
+        this._percentageChangedId = this._settings.connect('changed::show-percentage-change', () => {
+            this._refresh();
         });
     }
 
@@ -103,14 +104,14 @@ class Indicator extends PanelMenu.Button {
 
     async _refresh() {
         try {
-            this._label.set_text(_('Loading...'));
+            this._label.set_text('Loading...');
             const pair = this._currentPair || 'USD-TRY';
             const response = await this._fetchData(pair);
             
             if (!response) {
                 throw new Error('No response from API');
             }
-
+    
             const text = new TextDecoder().decode(response);
             const data = JSON.parse(text);
             const currencyData = data[pair.replace('-', '')];
@@ -118,17 +119,21 @@ class Indicator extends PanelMenu.Button {
             if (!currencyData) {
                 throw new Error('Invalid currency data');
             }
-
+    
+            // Base display text without percentage
             let displayText = `${CURRENCY_PAIRS[pair]}: ${currencyData.bid}`;
-            if (currencyData.pctChange) {
+    
+            // Check settings for showing percentage change
+            if (this._settings.get_boolean('show-percentage-change') && currencyData.pctChange) {
                 const change = parseFloat(currencyData.pctChange);
                 const changeText = change >= 0 ? `+${change}%` : `${change}%`;
                 displayText += ` (${changeText})`;
             }
+    
             this._label.set_text(displayText);
         } catch (error) {
             console.error('Refresh error:', error);
-            this._label.set_text(`Error: ${error.message}`);
+            this._label.set_text('Error: ' + error.message);
         }
     }
 
@@ -167,6 +172,9 @@ class Indicator extends PanelMenu.Button {
     destroy() {
         if (this._settingsChangedId) {
             this._settings.disconnect(this._settingsChangedId);
+        }
+        if (this._percentageChangedId) {
+            this._settings.disconnect(this._percentageChangedId);
         }
         super.destroy();
     }
