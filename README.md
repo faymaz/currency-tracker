@@ -9,12 +9,13 @@ A GNOME Shell extension that allows you to track various currency pairs and cryp
 
 ## Features
 
-- Track multiple currency pairs including USD, EUR, GBP, CNY, and TRY
+- Track multiple currency pairs including USD, EUR, GBP, CNY, TRY, and many more
 - Bitcoin price tracking in multiple currencies
 - Real-time updates with configurable refresh intervals
 - Customizable display options
 - Support for both light and dark GNOME themes
 - Simple and intuitive interface
+- Expandable currency pairs list
 
 ## Requirements
 
@@ -57,14 +58,49 @@ cp -r currency-tracker ~/.local/share/gnome-shell/extensions/currency-tracker@fa
 ## Supported Currency Pairs
 
 ### Fiat Currencies
-- USD/EUR, USD/GBP, USD/CNY, USD/TRY
-- EUR/USD, EUR/GBP, EUR/CNY, EUR/TRY
-- GBP/TRY, GBP/CNY
-- CNY/EUR, CNY/USD
+The extension supports a wide range of currency pairs including:
+- USD/EUR, USD/GBP, USD/CNY, USD/TRY, USD/JPY, USD/AUD, USD/CAD, USD/CHF, and more
+- EUR/USD, EUR/GBP, EUR/CNY, EUR/TRY, EUR/JPY, and more
+- Many other cross-currency pairs
 
 ### Cryptocurrencies
 - BTC/USD
 - BTC/EUR
+- BTC/GBP
+- BTC/TRY
+- BTC/JPY
+
+## Customizing Currency Pairs
+
+You can easily add or remove currency pairs from the extension by editing the `extension.js` file:
+
+1. Open the file located at `~/.local/share/gnome-shell/extensions/currency-tracker@faymaz.github.com/extension.js`
+2. Find the `CURRENCY_PAIRS` and `CURRENCY_CATEGORIES` objects
+
+### Adding Currency Pairs
+To add new currency pairs:
+1. Add a new entry to the `CURRENCY_PAIRS` object:
+   ```javascript
+   'XXX-YYY': 'XXX/YYY',
+   ```
+   where XXX is the base currency code and YYY is the quote currency code
+
+2. Add the pair to the appropriate category in `CURRENCY_CATEGORIES`:
+   ```javascript
+   'XXX Pairs': ['XXX-YYY', 'XXX-ZZZ'],
+   ```
+   
+3. Or create a new category:
+   ```javascript
+   'New Category': ['XXX-YYY', 'YYY-ZZZ'],
+   ```
+
+### Removing Currency Pairs
+To remove currency pairs:
+1. Simply remove the pair from both `CURRENCY_PAIRS` and `CURRENCY_CATEGORIES` objects
+2. If removing an entire category, delete the whole category entry from `CURRENCY_CATEGORIES`
+
+After making changes, restart GNOME Shell (Alt+F2, type 'r', press Enter) to apply them.
 
 ## Contributing
 
@@ -78,16 +114,17 @@ This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) 
 
 # Para Birimi Takip GNOME Eklentisi
 
-GNOME Shell için gerçek zamanlı döviz kurları ve kripto para birimlerini takip etmenizi sağlayan bir eklenti.
+GNOME Shell için gerçek zamanlı döviz kurları ve kripto para birimlerini takip etmenizi sağlayan bir eklenti. Bu eklenti döviz kuru verilerini awesomeapi.com.br servislerinden almaktadır.
 
 ## Özellikler
 
-- USD, EUR, GBP, CNY ve TRY dahil birden fazla para birimi çiftini takip etme
+- USD, EUR, GBP, CNY, TRY ve daha fazlası dahil olmak üzere birden fazla para birimi çiftini takip etme
 - Birden fazla para biriminde Bitcoin fiyat takibi
 - Ayarlanabilir yenileme aralıkları ile gerçek zamanlı güncellemeler
 - Özelleştirilebilir görüntüleme seçenekleri
 - Hem açık hem koyu GNOME temaları için destek
 - Basit ve sezgisel arayüz
+- Genişletilebilir para birimi çiftleri listesi
 
 ## Gereksinimler
 
@@ -130,14 +167,49 @@ cp -r currency-tracker ~/.local/share/gnome-shell/extensions/currency-tracker@fa
 ## Desteklenen Para Birimi Çiftleri
 
 ### Fiat Para Birimleri
-- USD/EUR, USD/GBP, USD/CNY, USD/TRY
-- EUR/USD, EUR/GBP, EUR/CNY, EUR/TRY
-- GBP/TRY, GBP/CNY
-- CNY/EUR, CNY/USD
+Eklenti aşağıdakiler de dahil olmak üzere çok çeşitli para birimi çiftlerini destekler:
+- USD/EUR, USD/GBP, USD/CNY, USD/TRY, USD/JPY, USD/AUD, USD/CAD, USD/CHF ve daha fazlası
+- EUR/USD, EUR/GBP, EUR/CNY, EUR/TRY, EUR/JPY ve daha fazlası
+- Diğer birçok çapraz kur çifti
 
 ### Kripto Para Birimleri
 - BTC/USD
 - BTC/EUR
+- BTC/GBP
+- BTC/TRY
+- BTC/JPY
+
+## Para Birimi Çiftlerini Özelleştirme
+
+`extension.js` dosyasını düzenleyerek eklentiye kolayca para birimi çiftleri ekleyebilir veya çıkarabilirsiniz:
+
+1. `~/.local/share/gnome-shell/extensions/currency-tracker@faymaz.github.com/extension.js` konumundaki dosyayı açın
+2. `CURRENCY_PAIRS` ve `CURRENCY_CATEGORIES` nesnelerini bulun
+
+### Para Birimi Çiftleri Ekleme
+Yeni para birimi çiftleri eklemek için:
+1. `CURRENCY_PAIRS` nesnesine yeni bir giriş ekleyin:
+   ```javascript
+   'XXX-YYY': 'XXX/YYY',
+   ```
+   burada XXX baz para birimi kodu ve YYY karşılaştırma para birimi kodudur
+
+2. Çifti `CURRENCY_CATEGORIES` içindeki uygun kategoriye ekleyin:
+   ```javascript
+   'XXX Pairs': ['XXX-YYY', 'XXX-ZZZ'],
+   ```
+   
+3. Veya yeni bir kategori oluşturun:
+   ```javascript
+   'Yeni Kategori': ['XXX-YYY', 'YYY-ZZZ'],
+   ```
+
+### Para Birimi Çiftlerini Kaldırma
+Para birimi çiftlerini kaldırmak için:
+1. Çifti hem `CURRENCY_PAIRS` hem de `CURRENCY_CATEGORIES` nesnelerinden kaldırın
+2. Tüm bir kategoriyi kaldırıyorsanız, kategori girişini `CURRENCY_CATEGORIES`'den silin
+
+Değişiklikleri yaptıktan sonra, uygulamak için GNOME Shell'i yeniden başlatın (Alt+F2, 'r' yazın, Enter'a basın).
 
 ## Katkıda Bulunma
 
