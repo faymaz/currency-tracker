@@ -12,6 +12,119 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 
+const CURRENCY_PAIRS = {
+    // USD çiftleri
+    'USD-EUR': 'USD/EUR',
+    'USD-GBP': 'USD/GBP',
+    'USD-JPY': 'USD/JPY',
+    'USD-CNY': 'USD/CNY',
+    'USD-TRY': 'USD/TRY',
+    'USD-MXN': 'USD/MXN',
+    'USD-KRW': 'USD/KRW',
+    'USD-ARS': 'USD/ARS',
+    'USD-BRL': 'USD/BRL',
+    'USD-CAD': 'USD/CAD',
+    'USD-AUD': 'USD/AUD',
+    'USD-CHF': 'USD/CHF',
+    'USD-SEK': 'USD/SEK',
+    'USD-NOK': 'USD/NOK',
+    'USD-DKK': 'USD/DKK',
+    'USD-ZAR': 'USD/ZAR',
+    'USD-RUB': 'USD/RUB',
+    'USD-INR': 'USD/INR',
+    'USD-ILS': 'USD/ILS',
+    'USD-SGD': 'USD/SGD',
+    
+    // EUR çiftleri
+    'EUR-USD': 'EUR/USD',
+    'EUR-GBP': 'EUR/GBP',
+    'EUR-JPY': 'EUR/JPY',
+    'EUR-CNY': 'EUR/CNY',
+    'EUR-TRY': 'EUR/TRY',
+    'EUR-MXN': 'EUR/MXN',
+    'EUR-KRW': 'EUR/KRW',
+    'EUR-ARS': 'EUR/ARS',
+    'EUR-BRL': 'EUR/BRL',
+    'EUR-CAD': 'EUR/CAD',
+    'EUR-AUD': 'EUR/AUD',
+    'EUR-CHF': 'EUR/CHF',
+    'EUR-SEK': 'EUR/SEK',
+    'EUR-NOK': 'EUR/NOK',
+    'EUR-DKK': 'EUR/DKK',
+    'EUR-ZAR': 'EUR/ZAR',
+    'EUR-RUB': 'EUR/RUB',
+    'EUR-INR': 'EUR/INR',
+    'EUR-ILS': 'EUR/ILS',
+    'EUR-SGD': 'EUR/SGD',
+    
+    // GBP çiftleri
+    'GBP-USD': 'GBP/USD',
+    'GBP-EUR': 'GBP/EUR',
+    'GBP-JPY': 'GBP/JPY',
+    'GBP-CNY': 'GBP/CNY',
+    'GBP-TRY': 'GBP/TRY',
+    
+    // CNY çiftleri
+    'CNY-USD': 'CNY/USD',
+    'CNY-EUR': 'CNY/EUR',
+    
+    // TRY çiftleri
+    'TRY-USD': 'TRY/USD',
+    'TRY-EUR': 'TRY/EUR',
+    
+    // Diğer fiat çiftleri
+    'MXN-USD': 'MXN/USD',
+    'MXN-EUR': 'MXN/EUR',
+    'JPY-USD': 'JPY/USD',
+    'JPY-EUR': 'JPY/EUR',
+    
+    // Kripto para birimleri
+    'BTC-USD': 'BTC/USD',
+    'BTC-EUR': 'BTC/EUR',
+    'BTC-GBP': 'BTC/GBP',
+    'BTC-JPY': 'BTC/JPY',
+    'BTC-TRY': 'BTC/TRY',
+    'ETH-USD': 'ETH/USD',
+    'ETH-EUR': 'ETH/EUR'
+};
+
+const CURRENCY_CATEGORIES = {
+    // Ana para birimleri
+    'USD Pairs': ['USD-EUR', 'USD-GBP', 'USD-JPY', 'USD-CNY', 'USD-TRY', 'USD-CAD', 'USD-AUD', 'USD-CHF'],
+    'EUR Pairs': ['EUR-USD', 'EUR-GBP', 'EUR-JPY', 'EUR-CNY', 'EUR-TRY', 'EUR-CAD', 'EUR-AUD', 'EUR-CHF'],
+    'GBP Pairs': ['GBP-USD', 'GBP-EUR', 'GBP-JPY'],
+    
+    // Asya para birimleri
+    'JPY Pairs': ['USD-JPY', 'EUR-JPY', 'GBP-JPY', 'JPY-USD', 'JPY-EUR'],
+    'CNY Pairs': ['USD-CNY', 'EUR-CNY', 'GBP-CNY', 'CNY-USD', 'CNY-EUR'],
+    'KRW Pairs': ['USD-KRW', 'EUR-KRW'],
+    'SGD Pairs': ['USD-SGD', 'EUR-SGD'],
+    
+    // Avrupa para birimleri
+    'TRY Pairs': ['USD-TRY', 'EUR-TRY', 'TRY-USD', 'TRY-EUR'],
+    'CHF Pairs': ['USD-CHF', 'EUR-CHF'],
+    'SEK Pairs': ['USD-SEK', 'EUR-SEK'],
+    'NOK Pairs': ['USD-NOK', 'EUR-NOK'],
+    'DKK Pairs': ['USD-DKK', 'EUR-DKK'],
+    'RUB Pairs': ['USD-RUB', 'EUR-RUB'],
+    
+    // Amerika para birimleri
+    'CAD Pairs': ['USD-CAD', 'EUR-CAD'],
+    'MXN Pairs': ['USD-MXN', 'EUR-MXN', 'MXN-USD', 'MXN-EUR'],
+    'BRL Pairs': ['USD-BRL', 'EUR-BRL'],
+    'ARS Pairs': ['USD-ARS', 'EUR-ARS'],
+    
+    // Diğer bölge para birimleri
+    'AUD Pairs': ['USD-AUD', 'EUR-AUD'],
+    'ZAR Pairs': ['USD-ZAR', 'EUR-ZAR'],
+    'INR Pairs': ['USD-INR', 'EUR-INR'],
+    'ILS Pairs': ['USD-ILS', 'EUR-ILS'],
+    
+    // Kripto para birimleri
+    'Bitcoin': ['BTC-USD', 'BTC-EUR'],
+    'Ethereum': ['ETH-USD', 'ETH-EUR'],
+};
+
 const Indicator = GObject.registerClass(
 class Indicator extends PanelMenu.Button {
     _init(extension) {
@@ -71,15 +184,20 @@ class Indicator extends PanelMenu.Button {
     _buildMenu() {
         // Kategorilere göre para birimi seçimi
         for (const [category, pairs] of Object.entries(CURRENCY_CATEGORIES)) {
-            const categorySubMenu = new PopupMenu.PopupSubMenuMenuItem(_(category));
+            const categorySubMenu = new PopupMenu.PopupSubMenuMenuItem(category);
             
             for (const pair of pairs) {
-                const menuItem = new PopupMenu.PopupMenuItem(CURRENCY_PAIRS[pair]);
-                menuItem.connect('activate', () => {
-                    this._currentPair = pair;
-                    this._refresh();
-                });
-                categorySubMenu.menu.addMenuItem(menuItem);
+                // Tanımlanmamış çiftler için kontrol ekliyoruz
+                if (CURRENCY_PAIRS[pair]) {
+                    const menuItem = new PopupMenu.PopupMenuItem(CURRENCY_PAIRS[pair]);
+                    menuItem.connect('activate', () => {
+                        this._currentPair = pair;
+                        this._refresh();
+                    });
+                    categorySubMenu.menu.addMenuItem(menuItem);
+                } else {
+                    console.warn(`Tanımlanmamış para birimi çifti: ${pair}`);
+                }
             }
             
             this.menu.addMenuItem(categorySubMenu);
@@ -88,14 +206,14 @@ class Indicator extends PanelMenu.Button {
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         
         // Refresh butonu
-        const refreshItem = new PopupMenu.PopupMenuItem(_('Refresh'));
+        const refreshItem = new PopupMenu.PopupMenuItem('Refresh');
         refreshItem.connect('activate', () => {
             this._refresh();
         });
         this.menu.addMenuItem(refreshItem);
 
         // Settings butonu
-        const settingsItem = new PopupMenu.PopupMenuItem(_('Settings'));
+        const settingsItem = new PopupMenu.PopupMenuItem('Settings');
         settingsItem.connect('activate', () => {
             this._extension.openPreferences();
         });
@@ -179,31 +297,6 @@ class Indicator extends PanelMenu.Button {
         super.destroy();
     }
 });
-
-const CURRENCY_PAIRS = {
-    'USD-EUR': 'USD/EUR',
-    'USD-GBP': 'USD/GBP',
-    'USD-CNY': 'USD/CNY',
-    'USD-TRY': 'USD/TRY',
-    'EUR-USD': 'EUR/USD',
-    'EUR-GBP': 'EUR/GBP',
-    'EUR-CNY': 'EUR/CNY',
-    'EUR-TRY': 'EUR/TRY',
-    'GBP-TRY': 'GBP/TRY',
-    'GBP-CNY': 'GBP/CNY',
-    'CNY-EUR': 'CNY/EUR',
-    'CNY-USD': 'CNY/USD',
-    'BTC-EUR': 'BTC/EUR',
-    'BTC-USD': 'BTC/USD'
-};
-
-const CURRENCY_CATEGORIES = {
-    'USD Pairs': ['USD-EUR', 'USD-GBP', 'USD-CNY', 'USD-TRY'],
-    'EUR Pairs': ['EUR-USD', 'EUR-GBP', 'EUR-CNY', 'EUR-TRY'],
-    'CNY Pairs': ['CNY-USD', 'CNY-EUR'],
-    'TRY Pairs': ['USD-TRY', 'EUR-TRY'],
-    'Bitcoin': ['BTC-USD', 'BTC-EUR']
-};
 
 export default class CurrencyTracker extends Extension {
     enable() {
