@@ -136,12 +136,22 @@ class Indicator extends PanelMenu.Button {
         this._panelBox = new St.BoxLayout({
             style_class: 'panel-status-menu-box'
         });
-    
-        // Icon ayarları
+        this._currentPair = this._settings.get_string('currency-pair');
+        
         this._icon = new St.Icon({
-            gicon: Gio.Icon.new_for_string(this._extension.path + '/icons/icon.svg'),
-            style_class: 'currency-tracker-icon'
+            icon_name: 'office-database-symbolic', // Fallback ikon
+            style_class: 'system-status-icon currency-tracker-icon'
         });
+        
+        try {
+            const iconPath = `${this._extension.path}/icons/icon.svg`;
+            const file = Gio.File.new_for_path(iconPath);
+            if (file.query_exists(null)) {
+                this._icon.gicon = Gio.Icon.new_for_string(iconPath);
+            }
+        } catch (error) {
+            console.error('Failed to load icon:', error);
+        }
     
         this._label = new St.Label({
             text: 'Loading...',
@@ -223,13 +233,14 @@ class Indicator extends PanelMenu.Button {
     async _refresh() {
         try {
             this._label.set_text('Loading...');
-            const pair = this._currentPair || 'USD-TRY';
+            const pair = this._currentPair || this._settings.get_string('currency-pair');
+            
+            if (this._currentPair) {
+                this._settings.set_string('currency-pair', this._currentPair);
+            }
+            
             const response = await this._fetchData(pair);
             
-            if (!response) {
-                throw new Error('No response from API');
-            }
-    
             const text = new TextDecoder().decode(response);
             const data = JSON.parse(text);
             const currencyData = data[pair.replace('-', '')];

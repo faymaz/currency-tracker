@@ -9,7 +9,7 @@
     },
     "gettext-domain": "currency-tracker",
     "stylesheet": "stylesheet.css",
-    "icon": "icons/icon.png",
+    "icon": "icons/icon.svg",
     "name": "Currency Tracker",
     "settings-schema": "org.gnome.shell.extensions.currency-tracker",
     "shell-version": [
@@ -19,5 +19,5 @@
     ],
     "url": "https://github.com/faymaz/currency-tracker",
     "uuid": "currency-tracker@faymaz.github.com",
-    "version": 4
+    "version": 6
   }
