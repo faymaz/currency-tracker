@@ -25,7 +25,7 @@ A GNOME Shell extension that allows you to track various currency pairs and cryp
 ## Installation
 
 ### From GNOME Extensions Website
-1. Visit [Currency Tracker on GNOME Extensions](https://extensions.gnome.org/extension/currency-tracker)
+1. Visit [Currency Tracker on GNOME Extensions](https://extensions.gnome.org/extension/7862/currency-tracker/)
 2. Click on the toggle switch to install
 
 ### Manual Installation
