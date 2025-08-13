@@ -139,7 +139,7 @@ class Indicator extends PanelMenu.Button {
         this._currentPair = this._settings.get_string('currency-pair');
         
         this._icon = new St.Icon({
-            icon_name: 'office-database-symbolic', // Fallback ikon
+            icon_name: 'office-database-symbolic', 
             style_class: 'system-status-icon currency-tracker-icon'
         });
         
@@ -168,12 +168,12 @@ class Indicator extends PanelMenu.Button {
         this._buildMenu();
         this._refresh();
     
-        // Settings değişikliklerini dinle
+        
         this._settingsChangedId = this._settings.connect('changed::show-icon', () => {
             this._updateIconVisibility();
         });
     
-        // Percentage change ayarını dinle
+       
         this._percentageChangedId = this._settings.connect('changed::show-percentage-change', () => {
             this._refresh();
         });
@@ -192,12 +192,12 @@ class Indicator extends PanelMenu.Button {
     }
 
     _buildMenu() {
-        // Kategorilere göre para birimi seçimi
+        
         for (const [category, pairs] of Object.entries(CURRENCY_CATEGORIES)) {
             const categorySubMenu = new PopupMenu.PopupSubMenuMenuItem(category);
             
             for (const pair of pairs) {
-                // Tanımlanmamış çiftler için kontrol ekliyoruz
+                
                 if (CURRENCY_PAIRS[pair]) {
                     const menuItem = new PopupMenu.PopupMenuItem(CURRENCY_PAIRS[pair]);
                     menuItem.connect('activate', () => {
@@ -215,14 +215,14 @@ class Indicator extends PanelMenu.Button {
         
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         
-        // Refresh butonu
+       
         const refreshItem = new PopupMenu.PopupMenuItem('Refresh');
         refreshItem.connect('activate', () => {
             this._refresh();
         });
         this.menu.addMenuItem(refreshItem);
 
-        // Settings butonu
+       
         const settingsItem = new PopupMenu.PopupMenuItem('Settings');
         settingsItem.connect('activate', () => {
             this._extension.openPreferences();
@@ -241,18 +241,48 @@ class Indicator extends PanelMenu.Button {
             
             const response = await this._fetchData(pair);
             
+            if (!response) {
+                throw new Error('No response from API');
+            }
+            
             const text = new TextDecoder().decode(response);
+            console.log('API Response for', pair, ':', text); 
+            
             const data = JSON.parse(text);
-            const currencyData = data[pair.replace('-', '')];
+            console.log('Parsed data:', data); 
+            
+            
+            const possibleKeys = [
+                pair.replace('-', ''), 
+                pair.replace('-', '').toUpperCase(), 
+                pair.replace('-', '').toLowerCase(),
+                pair, 
+                pair.toUpperCase(), 
+                pair.toLowerCase() 
+            ];
+            
+            let currencyData = null;
+            let usedKey = null;
+            
+            for (const key of possibleKeys) {
+                if (data[key]) {
+                    currencyData = data[key];
+                    usedKey = key;
+                    break;
+                }
+            }
+            
+            console.log('Found data with key:', usedKey); 
             
             if (!currencyData) {
-                throw new Error('Invalid currency data');
+                console.error('Available keys in response:', Object.keys(data));
+                throw new Error(`No currency data found for ${pair}. Available keys: ${Object.keys(data).join(', ')}`);
             }
     
-            // Base display text without percentage
-            let displayText = `${CURRENCY_PAIRS[pair]}: ${currencyData.bid}`;
+            
+            let displayText = `${CURRENCY_PAIRS[pair]}: ${currencyData.bid || currencyData.ask || currencyData.high || 'N/A'}`;
     
-            // Check settings for showing percentage change
+           
             if (this._settings.get_boolean('show-percentage-change') && currencyData.pctChange) {
                 const change = parseFloat(currencyData.pctChange);
                 const changeText = change >= 0 ? `+${change}%` : `${change}%`;
@@ -269,28 +299,43 @@ class Indicator extends PanelMenu.Button {
     async _fetchData(pair) {
         let session = null;
         try {
-            const url = `https://economia.awesomeapi.com.br/json/last/${pair}`;
+           
+            const apiPair = pair.replace('-', '-');
+            const url = `https://economia.awesomeapi.com.br/json/last/${apiPair}`;
+            console.log('Fetching from URL:', url);
+            
             session = new Soup.Session();
+            session.timeout = 10; 
+            
             const message = Soup.Message.new('GET', url);
             
             if (!message) {
                 throw new Error('Failed to create HTTP message');
             }
-
+    
+           
+            message.request_headers.append('User-Agent', 'Currency-Tracker-GNOME-Extension/1.0');
+    
             const bytes = await session.send_and_read_async(
                 message,
                 GLib.PRIORITY_DEFAULT,
                 null
             );
-
+    
             if (!bytes) {
                 throw new Error('No response data');
             }
-
+    
+           
+            const statusCode = message.status_code;
+            if (statusCode !== 200) {
+                throw new Error(`HTTP Error: ${statusCode}`);
+            }
+    
             return bytes.get_data();
         } catch (error) {
-            console.error('Fetch error:', error);
-            return null;
+            console.error('Fetch error for pair', pair, ':', error);
+            throw error;
         } finally {
             if (session) {
                 session.abort();
