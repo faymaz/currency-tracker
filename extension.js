@@ -165,7 +165,34 @@ class Indicator extends PanelMenu.Button {
         this._label = new St.Label({
             text: 'Loading...',
             y_align: Clutter.ActorAlign.CENTER,
-            style_class: 'currency-tracker-label'
+            style_class: 'currency-tracker-label',
+            reactive: true,
+            track_hover: true
+        });
+
+        // Add tooltip support for when text is truncated
+        this._tooltipLabel = new St.Label({
+            style_class: 'currency-tooltip',
+            text: '',
+            visible: false
+        });
+
+        // Add hover events to show full text
+        this._label.connect('notify::hover', () => {
+            if (this._label.hover && this._lastKnownValue) {
+                this._tooltipLabel.set_text(this._lastKnownValue);
+                this._tooltipLabel.visible = true;
+
+                // Position tooltip above the label
+                const [x, y] = this._label.get_transformed_position();
+                const monitor = Main.layoutManager.primaryMonitor;
+                this._tooltipLabel.set_position(x, monitor.y + Main.panel.height);
+
+                Main.layoutManager.addChrome(this._tooltipLabel);
+            } else {
+                this._tooltipLabel.visible = false;
+                Main.layoutManager.removeChrome(this._tooltipLabel);
+            }
         });
         
         if (this._settings.get_boolean('show-icon')) {
@@ -420,7 +447,7 @@ class Indicator extends PanelMenu.Button {
         if (!this._notificationSource) {
             this._notificationSource = new MessageTray.Source({
                 title: 'Currency Tracker',
-                icon_name: 'dialog-information'
+                iconName: 'dialog-information'
             });
             Main.messageTray.add(this._notificationSource);
         }
@@ -432,7 +459,7 @@ class Indicator extends PanelMenu.Button {
             isTransient: true
         });
 
-        this._notificationSource.addNotification(notification);
+        this._notificationSource.showNotification(notification);
         this._debugLog(`Notification sent: ${message}`);
     }
 
@@ -541,6 +568,15 @@ class Indicator extends PanelMenu.Button {
         if (this._notificationSource) {
             this._notificationSource.destroy();
             this._notificationSource = null;
+        }
+
+        // Clean up tooltip
+        if (this._tooltipLabel) {
+            if (this._tooltipLabel.visible) {
+                Main.layoutManager.removeChrome(this._tooltipLabel);
+            }
+            this._tooltipLabel.destroy();
+            this._tooltipLabel = null;
         }
 
         // Disconnect all signal handlers
