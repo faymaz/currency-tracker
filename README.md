@@ -9,13 +9,24 @@ A GNOME Shell extension that allows you to track various currency pairs and cryp
 
 ## Features
 
+### Core Features
 - Track multiple currency pairs including USD, EUR, GBP, CNY, TRY, and many more
-- Bitcoin price tracking in multiple currencies
-- Real-time updates with configurable refresh intervals
-- Customizable display options
+- Bitcoin and Ethereum price tracking in multiple currencies
+- Real-time updates with configurable refresh intervals (30-3600 seconds)
+- Automatic refresh with configurable intervals
 - Support for both light and dark GNOME themes
 - Simple and intuitive interface
 - Expandable currency pairs list
+
+### Advanced Features
+- **Smart Caching**: Offline mode with cached data when network is unavailable
+- **Colored Indicators**: Visual feedback with green (↑) for gains and red (↓) for losses
+- **Rate Limiting**: Prevents excessive API calls (minimum 10 seconds between manual refreshes)
+- **Retry Mechanism**: Automatic retry with exponential backoff (1s, 2s, 4s) on failures
+- **Price Alerts**: Get notifications when currency rates reach your threshold
+- **Debug Mode**: Enable detailed logging for troubleshooting
+- **Display Customization**: Configure decimal places (2-4) for rate display
+- **Better Error Messages**: Clear, user-friendly error messages for all scenarios
 
 ## Requirements
 
@@ -50,10 +61,24 @@ cp -r currency-tracker ~/.local/share/gnome-shell/extensions/currency-tracker@fa
 1. Click on the extension icon in the top panel
 2. Select "Settings" from the menu
 3. Adjust the following options:
-   - Default currency pair
-   - Refresh interval (30-3600 seconds)
-   - Show/hide percentage changes
-   - Show/hide currency icon
+
+### General Settings
+   - **Default Currency Pair**: Select your preferred currency pair
+   - **Refresh Interval**: Time between automatic updates (30-3600 seconds)
+
+### Display Settings
+   - **Show Percentage Change**: Display the percentage change with colored indicators
+   - **Show Icon**: Toggle the currency icon in the panel
+   - **Decimal Places**: Number of decimal places to display (2-4)
+
+### Notification Settings
+   - **Enable Notifications**: Turn on price alert notifications
+   - **Notification Threshold**: Set the rate value to trigger notifications
+   - **Notification Type**: Choose "Above Threshold" or "Below Threshold"
+
+### Advanced Settings
+   - **Enable Debug Logging**: Enable detailed logs for troubleshooting
+     - View logs with: `journalctl -f -o cat /usr/bin/gnome-shell`
 
 ## Supported Currency Pairs
 
@@ -118,13 +143,24 @@ GNOME Shell için gerçek zamanlı döviz kurları ve kripto para birimlerini ta
 
 ## Özellikler
 
+### Temel Özellikler
 - USD, EUR, GBP, CNY, TRY ve daha fazlası dahil olmak üzere birden fazla para birimi çiftini takip etme
-- Birden fazla para biriminde Bitcoin fiyat takibi
-- Ayarlanabilir yenileme aralıkları ile gerçek zamanlı güncellemeler
-- Özelleştirilebilir görüntüleme seçenekleri
+- Birden fazla para biriminde Bitcoin ve Ethereum fiyat takibi
+- Ayarlanabilir yenileme aralıkları (30-3600 saniye) ile gerçek zamanlı güncellemeler
+- Otomatik yenileme desteği
 - Hem açık hem koyu GNOME temaları için destek
 - Basit ve sezgisel arayüz
 - Genişletilebilir para birimi çiftleri listesi
+
+### Gelişmiş Özellikler
+- **Akıllı Önbellekleme**: Ağ bağlantısı olmadığında önbellekli verilerle çalışma
+- **Renkli Göstergeler**: Artış için yeşil (↑), düşüş için kırmızı (↓) görsel geri bildirim
+- **Hız Sınırlama**: Aşırı API çağrılarını önleme (manuel yenilemeler arası minimum 10 saniye)
+- **Yeniden Deneme Mekanizması**: Hatalarda exponential backoff ile otomatik yeniden deneme (1s, 2s, 4s)
+- **Fiyat Uyarıları**: Kur belirli eşiğe ulaştığında bildirim alma
+- **Hata Ayıklama Modu**: Sorun giderme için detaylı loglama
+- **Görüntü Özelleştirme**: Kur gösteriminde ondalık basamak sayısını ayarlama (2-4)
+- **Gelişmiş Hata Mesajları**: Tüm senaryolar için açık, kullanıcı dostu hata mesajları
 
 ## Gereksinimler
 
@@ -159,10 +195,24 @@ cp -r currency-tracker ~/.local/share/gnome-shell/extensions/currency-tracker@fa
 1. Üst paneldeki eklenti simgesine tıklayın
 2. Menüden "Ayarlar"ı seçin
 3. Aşağıdaki seçenekleri ayarlayın:
-   - Varsayılan para birimi çifti
-   - Yenileme aralığı (30-3600 saniye)
-   - Yüzde değişimlerini göster/gizle
-   - Para birimi simgesini göster/gizle
+
+### Genel Ayarlar
+   - **Varsayılan Para Birimi Çifti**: Tercih ettiğiniz para birimi çiftini seçin
+   - **Yenileme Aralığı**: Otomatik güncellemeler arası süre (30-3600 saniye)
+
+### Görüntüleme Ayarları
+   - **Yüzde Değişimini Göster**: Renkli göstergelerle yüzde değişimini göster
+   - **Simgeyi Göster**: Paneldeki para birimi simgesini aç/kapat
+   - **Ondalık Basamak**: Gösterilecek ondalık basamak sayısı (2-4)
+
+### Bildirim Ayarları
+   - **Bildirimleri Etkinleştir**: Fiyat uyarı bildirimlerini aç
+   - **Bildirim Eşiği**: Bildirimi tetikleyecek kur değeri
+   - **Bildirim Türü**: "Eşiğin Üstünde" veya "Eşiğin Altında" seçin
+
+### Gelişmiş Ayarlar
+   - **Hata Ayıklama Loglarını Etkinleştir**: Sorun giderme için detaylı loglar
+     - Logları görüntüleme: `journalctl -f -o cat /usr/bin/gnome-shell`
 
 ## Desteklenen Para Birimi Çiftleri
 

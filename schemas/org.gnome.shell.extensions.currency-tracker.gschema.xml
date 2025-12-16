@@ -25,6 +25,36 @@
       <summary>Show icon</summary>
       <description>Whether to show the currency icon in the panel</description>
     </key>
-    
+
+    <key name="enable-debug-log" type="b">
+      <default>false</default>
+      <summary>Enable debug logging</summary>
+      <description>Enable debug logging for troubleshooting</description>
+    </key>
+
+    <key name="enable-notifications" type="b">
+      <default>false</default>
+      <summary>Enable notifications</summary>
+      <description>Show notifications when currency reaches threshold</description>
+    </key>
+
+    <key name="notification-threshold" type="d">
+      <default>0.0</default>
+      <summary>Notification threshold</summary>
+      <description>Rate threshold for notifications (0 = disabled)</description>
+    </key>
+
+    <key name="notification-type" type="s">
+      <default>'above'</default>
+      <summary>Notification type</summary>
+      <description>Trigger when rate goes above or below threshold</description>
+    </key>
+
+    <key name="decimal-places" type="i">
+      <default>2</default>
+      <summary>Decimal places</summary>
+      <description>Number of decimal places to display (2-4)</description>
+    </key>
+
   </schema>
 </schemalist>

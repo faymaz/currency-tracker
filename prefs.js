@@ -128,5 +128,109 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
         });
 
         displayGroup.add(showIconSwitch);
+
+        // Advanced settings group
+        const advancedGroup = new Adw.PreferencesGroup({
+            title: 'Advanced Settings',
+            description: 'Configure advanced options'
+        });
+        page.add(advancedGroup);
+
+        // Debug logging toggle
+        const debugSwitch = new Adw.SwitchRow({
+            title: 'Enable Debug Logging',
+            subtitle: 'Enable debug logging for troubleshooting (check logs with: journalctl -f -o cat /usr/bin/gnome-shell)'
+        });
+
+        debugSwitch.set_active(settings.get_boolean('enable-debug-log'));
+        debugSwitch.connect('notify::active', widget => {
+            settings.set_boolean('enable-debug-log', widget.active);
+        });
+
+        advancedGroup.add(debugSwitch);
+
+        // Notification settings group
+        const notificationGroup = new Adw.PreferencesGroup({
+            title: 'Notification Settings',
+            description: 'Configure price alerts and notifications'
+        });
+        page.add(notificationGroup);
+
+        // Enable notifications
+        const enableNotificationsSwitch = new Adw.SwitchRow({
+            title: 'Enable Notifications',
+            subtitle: 'Show notifications when rate reaches threshold'
+        });
+
+        enableNotificationsSwitch.set_active(settings.get_boolean('enable-notifications'));
+        enableNotificationsSwitch.connect('notify::active', widget => {
+            settings.set_boolean('enable-notifications', widget.active);
+        });
+
+        notificationGroup.add(enableNotificationsSwitch);
+
+        // Notification threshold
+        const thresholdRow = new Adw.SpinRow({
+            title: 'Notification Threshold',
+            subtitle: 'Rate value to trigger notification (0 = disabled)',
+            adjustment: new Gtk.Adjustment({
+                lower: 0,
+                upper: 1000000,
+                step_increment: 0.1,
+                value: settings.get_double('notification-threshold')
+            }),
+            digits: 2
+        });
+
+        thresholdRow.connect('notify::value', widget => {
+            settings.set_double('notification-threshold', widget.value);
+        });
+
+        notificationGroup.add(thresholdRow);
+
+        // Notification type
+        const notificationTypeRow = new Adw.ComboRow({
+            title: 'Notification Type',
+            subtitle: 'Trigger notification when rate goes above or below threshold'
+        });
+
+        const notificationTypeModel = new Gtk.StringList();
+        notificationTypeModel.append('Above Threshold');
+        notificationTypeModel.append('Below Threshold');
+
+        notificationTypeRow.model = notificationTypeModel;
+        notificationTypeRow.selected = settings.get_string('notification-type') === 'above' ? 0 : 1;
+
+        notificationTypeRow.connect('notify::selected', widget => {
+            const type = widget.selected === 0 ? 'above' : 'below';
+            settings.set_string('notification-type', type);
+        });
+
+        notificationGroup.add(notificationTypeRow);
+
+        // Display customization group
+        const customizationGroup = new Adw.PreferencesGroup({
+            title: 'Display Customization',
+            description: 'Customize how currency data is displayed'
+        });
+        page.add(customizationGroup);
+
+        // Decimal places
+        const decimalPlacesRow = new Adw.SpinRow({
+            title: 'Decimal Places',
+            subtitle: 'Number of decimal places to display',
+            adjustment: new Gtk.Adjustment({
+                lower: 2,
+                upper: 4,
+                step_increment: 1,
+                value: settings.get_int('decimal-places') || 2
+            })
+        });
+
+        decimalPlacesRow.connect('notify::value', widget => {
+            settings.set_int('decimal-places', widget.value);
+        });
+
+        customizationGroup.add(decimalPlacesRow);
     }
 }

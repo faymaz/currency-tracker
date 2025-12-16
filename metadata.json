@@ -4,7 +4,10 @@
       "status-indicators"
     ],
     "description": "Track multiple currency pairs including cryptocurrencies. This extension uses awesomeapi.com.br services for currency rate data.",
-    "donation-url": "https://buymeacoffee.com/faymaz",
+    "donations": {
+    "buymeacoffee": "fethiaymazb",
+    "github": "faymaz"
+    },
     "gettext-domain": "currency-tracker",
     "stylesheet": "stylesheet.css",
     "icon": "icons/icon.svg",

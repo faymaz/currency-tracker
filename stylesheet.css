@@ -6,6 +6,20 @@
 .currency-tracker-label {
     margin: 0 8px;
 }
+
+.currency-positive {
+    color: #4ade80;
+    font-weight: 500;
+}
+
+.currency-negative {
+    color: #f87171;
+    font-weight: 500;
+}
+
+.currency-neutral {
+    color: inherit;
+}
 .currency-tracker-icon {
     icon-size: 16px;
     -st-icon-style: symbolic;
@@ -19,7 +33,7 @@
     spacing: 4px;
 }
 
-/* Koyu tema için */
+/* Dark theme support */
 .dark .currency-tracker-icon {
     filter: invert(1);
 }
