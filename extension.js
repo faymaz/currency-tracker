@@ -170,20 +170,20 @@ class Indicator extends PanelMenu.Button {
             track_hover: true
         });
 
-        // Add tooltip support for when text is truncated
+       
         this._tooltipLabel = new St.Label({
             style_class: 'currency-tooltip',
             text: '',
             visible: false
         });
 
-        // Add hover events to show full text
+       
         this._label.connect('notify::hover', () => {
             if (this._label.hover && this._lastKnownValue) {
                 this._tooltipLabel.set_text(this._lastKnownValue);
                 this._tooltipLabel.visible = true;
 
-                // Position tooltip above the label
+               
                 const [x, y] = this._label.get_transformed_position();
                 const monitor = Main.layoutManager.primaryMonitor;
                 this._tooltipLabel.set_position(x, monitor.y + Main.panel.height);
@@ -205,7 +205,7 @@ class Indicator extends PanelMenu.Button {
         this._refresh();
         this._setupAutoRefresh();
 
-        // Listen for setting changes
+       
         this._settingsChangedId = this._settings.connect('changed::show-icon', () => {
             this._updateIconVisibility();
         });
@@ -226,7 +226,7 @@ class Indicator extends PanelMenu.Button {
     }
 
     _setupAutoRefresh() {
-        // Clear existing timeout
+       
         if (this._refreshTimeout) {
             GLib.source_remove(this._refreshTimeout);
             this._refreshTimeout = null;
@@ -235,7 +235,7 @@ class Indicator extends PanelMenu.Button {
         const interval = this._settings.get_int('refresh-interval');
         this._debugLog(`Setting up auto-refresh with interval: ${interval} seconds`);
 
-        // Setup new timeout
+       
         this._refreshTimeout = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
             interval,
@@ -299,9 +299,9 @@ class Indicator extends PanelMenu.Button {
     }
 
     async _refresh() {
-        // Rate limiting check
+       
         const now = Date.now();
-        const minInterval = 10000; // 10 seconds minimum between manual refreshes
+        const minInterval = 10000;
         if (now - this._lastRefreshTime < minInterval) {
             this._debugLog('Rate limit: Refresh request ignored (too frequent)');
             return;
@@ -312,7 +312,7 @@ class Indicator extends PanelMenu.Button {
             const pair = this._currentPair || this._settings.get_string('currency-pair');
             this._debugLog(`Refreshing currency pair: ${pair}`);
 
-            // Show last known value during refresh if available
+           
             if (this._lastKnownValue) {
                 this._debugLog('Showing last known value during refresh');
             } else {
@@ -336,7 +336,7 @@ class Indicator extends PanelMenu.Button {
             this._debugLog(`Parsed data: ${JSON.stringify(data)}`); 
 
 
-            // Try different key formats
+           
             const possibleKeys = [
                 pair.replace('-', ''),
                 pair.replace('-', '').toUpperCase(),
@@ -364,19 +364,19 @@ class Indicator extends PanelMenu.Button {
                 throw new Error(`No currency data found for ${pair}. Available keys: ${Object.keys(data).join(', ')}`);
             }
 
-            // Cache the data
+           
             this._cachedData.set(pair, {data: currencyData, timestamp: Date.now()});
 
-            // Build display text
+           
             const rateRaw = parseFloat(currencyData.bid || currencyData.ask || currencyData.high || 0);
             const decimalPlaces = this._settings.get_int('decimal-places');
             const rate = rateRaw > 0 ? rateRaw.toFixed(decimalPlaces) : 'N/A';
             let displayText = `${CURRENCY_PAIRS[pair]}: ${rate}`;
 
-            // Check notification threshold
+           
             this._checkNotificationThreshold(pair, rateRaw);
 
-            // Add percentage change if enabled and update styling
+           
             let styleClass = 'currency-neutral';
             if (this._settings.get_boolean('show-percentage-change') && currencyData.pctChange) {
                 const change = parseFloat(currencyData.pctChange);
@@ -384,21 +384,21 @@ class Indicator extends PanelMenu.Button {
                 const changeText = change >= 0 ? `+${change}%` : `${change}%`;
                 displayText += ` ${arrow}${changeText}`;
 
-                // Set color based on change
+               
                 styleClass = change >= 0 ? 'currency-positive' : 'currency-negative';
             }
 
-            // Update label style
+           
             this._label.style_class = `currency-tracker-label ${styleClass}`;
 
             this._lastKnownValue = displayText;
             this._label.set_text(displayText);
-            this._retryCount = 0; // Reset retry count on success
+            this._retryCount = 0;
             this._debugLog(`Successfully updated display: ${displayText}`);
         } catch (error) {
             console.error('Refresh error:', error);
 
-            // Try to use cached data if available
+           
             const pair = this._currentPair || this._settings.get_string('currency-pair');
             const cached = this._cachedData.get(pair);
 
@@ -428,7 +428,7 @@ class Indicator extends PanelMenu.Button {
         const shouldNotify = (notificationType === 'above' && rate >= threshold) ||
                            (notificationType === 'below' && rate <= threshold);
 
-        // Only notify once when threshold is crossed
+       
         const hasNotified = (notificationType === 'above' && this._lastNotificationRate >= threshold) ||
                           (notificationType === 'below' && this._lastNotificationRate <= threshold);
 
@@ -468,7 +468,7 @@ class Indicator extends PanelMenu.Button {
             return await this._fetchData(pair);
         } catch (error) {
             if (retryAttempt < this._maxRetries) {
-                const backoffTime = Math.pow(2, retryAttempt) * 1000; // 1s, 2s, 4s
+                const backoffTime = Math.pow(2, retryAttempt) * 1000;
                 this._debugLog(`Retry ${retryAttempt + 1}/${this._maxRetries} after ${backoffTime}ms`);
 
                 await new Promise(resolve => GLib.timeout_add(GLib.PRIORITY_DEFAULT, backoffTime, () => {
@@ -485,7 +485,7 @@ class Indicator extends PanelMenu.Button {
     async _fetchData(pair) {
         let session = null;
         try {
-            // Prepare API URL
+           
             const apiPair = pair.replace('-', '-');
             const url = `https://economia.awesomeapi.com.br/json/last/${apiPair}`;
             this._debugLog(`Fetching from URL: ${url}`);
@@ -499,7 +499,7 @@ class Indicator extends PanelMenu.Button {
                 throw new Error('Failed to create HTTP message. Check your internet connection.');
             }
 
-            // Set user agent
+           
             message.request_headers.append('User-Agent', 'Currency-Tracker-GNOME-Extension/1.0');
 
             const bytes = await session.send_and_read_async(
@@ -512,7 +512,7 @@ class Indicator extends PanelMenu.Button {
                 throw new Error('No response data received from API');
             }
 
-            // Check status code with detailed messages
+           
             const statusCode = message.status_code;
             if (statusCode !== 200) {
                 let errorMsg = `HTTP ${statusCode}`;
@@ -539,7 +539,7 @@ class Indicator extends PanelMenu.Button {
 
             return bytes.get_data();
         } catch (error) {
-            // Enhance error messages
+           
             let enhancedError = error;
             if (error.message && error.message.includes('Could not resolve host')) {
                 enhancedError = new Error('No internet connection');
@@ -558,19 +558,19 @@ class Indicator extends PanelMenu.Button {
     }
 
     destroy() {
-        // Clear auto-refresh timeout
+       
         if (this._refreshTimeout) {
             GLib.source_remove(this._refreshTimeout);
             this._refreshTimeout = null;
         }
 
-        // Clean up notification source
+       
         if (this._notificationSource) {
             this._notificationSource.destroy();
             this._notificationSource = null;
         }
 
-        // Clean up tooltip
+       
         if (this._tooltipLabel) {
             if (this._tooltipLabel.visible) {
                 Main.layoutManager.removeChrome(this._tooltipLabel);
@@ -579,7 +579,7 @@ class Indicator extends PanelMenu.Button {
             this._tooltipLabel = null;
         }
 
-        // Disconnect all signal handlers
+       
         if (this._settingsChangedId) {
             this._settings.disconnect(this._settingsChangedId);
         }
@@ -590,7 +590,7 @@ class Indicator extends PanelMenu.Button {
             this._settings.disconnect(this._refreshIntervalChangedId);
         }
 
-        // Clear cached data
+       
         this._cachedData.clear();
 
         super.destroy();

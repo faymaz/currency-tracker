@@ -40,18 +40,18 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const settings = this.getSettings();
 
-        // Create preferences page
+       
         const page = new Adw.PreferencesPage();
         window.add(page);
 
-        // General settings group
+       
         const generalGroup = new Adw.PreferencesGroup({
             title: 'General Settings',
             description: 'Configure general extension settings'
         });
         page.add(generalGroup);
 
-        // Default currency pair
+       
         const currencyRow = new Adw.ComboRow({
             title: 'Default Currency Pair',
             subtitle: 'Select the default currency pair to display'
@@ -64,7 +64,7 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         currencyRow.model = currencyModel;
         
-        // Set current value
+       
         const currentPair = settings.get_string('currency-pair');
         const index = Object.keys(CURRENCY_PAIRS).indexOf(currentPair);
         if (index !== -1) {
@@ -78,7 +78,7 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         generalGroup.add(currencyRow);
 
-        // Refresh interval
+       
         const refreshRow = new Adw.SpinRow({
             title: 'Refresh Interval',
             subtitle: 'Time in seconds between updates (30-3600)',
@@ -96,14 +96,14 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         generalGroup.add(refreshRow);
 
-        // Display settings group
+       
         const displayGroup = new Adw.PreferencesGroup({
             title: 'Display Settings',
             description: 'Configure how the currency information is displayed'
         });
         page.add(displayGroup);
 
-        // Show percentage change
+       
         const showChangeSwitch = new Adw.SwitchRow({
             title: 'Show Percentage Change',
             subtitle: 'Display the percentage change in the panel'
@@ -116,7 +116,7 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         displayGroup.add(showChangeSwitch);
 
-        // Show currency icon
+       
         const showIconSwitch = new Adw.SwitchRow({
             title: 'Show Icon',
             subtitle: 'Display the currency icon in the panel'
@@ -129,14 +129,14 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         displayGroup.add(showIconSwitch);
 
-        // Advanced settings group
+       
         const advancedGroup = new Adw.PreferencesGroup({
             title: 'Advanced Settings',
             description: 'Configure advanced options'
         });
         page.add(advancedGroup);
 
-        // Debug logging toggle
+       
         const debugSwitch = new Adw.SwitchRow({
             title: 'Enable Debug Logging',
             subtitle: 'Enable debug logging for troubleshooting (check logs with: journalctl -f -o cat /usr/bin/gnome-shell)'
@@ -149,14 +149,14 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         advancedGroup.add(debugSwitch);
 
-        // Notification settings group
+       
         const notificationGroup = new Adw.PreferencesGroup({
             title: 'Notification Settings',
             description: 'Configure price alerts and notifications'
         });
         page.add(notificationGroup);
 
-        // Enable notifications
+       
         const enableNotificationsSwitch = new Adw.SwitchRow({
             title: 'Enable Notifications',
             subtitle: 'Show notifications when rate reaches threshold'
@@ -169,7 +169,7 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         notificationGroup.add(enableNotificationsSwitch);
 
-        // Notification threshold
+       
         const thresholdRow = new Adw.SpinRow({
             title: 'Notification Threshold',
             subtitle: 'Rate value to trigger notification (0 = disabled)',
@@ -188,7 +188,7 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         notificationGroup.add(thresholdRow);
 
-        // Notification type
+       
         const notificationTypeRow = new Adw.ComboRow({
             title: 'Notification Type',
             subtitle: 'Trigger notification when rate goes above or below threshold'
@@ -208,14 +208,14 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         notificationGroup.add(notificationTypeRow);
 
-        // Display customization group
+       
         const customizationGroup = new Adw.PreferencesGroup({
             title: 'Display Customization',
             description: 'Customize how currency data is displayed'
         });
         page.add(customizationGroup);
 
-        // Decimal places
+       
         const decimalPlacesRow = new Adw.SpinRow({
             title: 'Decimal Places',
             subtitle: 'Number of decimal places to display',
