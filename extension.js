@@ -134,6 +134,7 @@ class Indicator extends PanelMenu.Button {
         this._extension = extension;
         this._settings = extension.getSettings();
         this._refreshTimeout = null;
+        this._retryTimeout = null;
         this._lastRefreshTime = 0;
         this._retryCount = 0;
         this._maxRetries = 3;
@@ -226,16 +227,22 @@ class Indicator extends PanelMenu.Button {
     }
 
     _setupAutoRefresh() {
-       
+        // Remove existing refresh timeout
         if (this._refreshTimeout) {
             GLib.source_remove(this._refreshTimeout);
             this._refreshTimeout = null;
         }
 
+        // Remove any pending retry timeout
+        if (this._retryTimeout) {
+            GLib.source_remove(this._retryTimeout);
+            this._retryTimeout = null;
+        }
+
         const interval = this._settings.get_int('refresh-interval');
         this._debugLog(`Setting up auto-refresh with interval: ${interval} seconds`);
 
-       
+        // Set up new refresh timeout
         this._refreshTimeout = GLib.timeout_add_seconds(
             GLib.PRIORITY_DEFAULT,
             interval,
@@ -471,10 +478,19 @@ class Indicator extends PanelMenu.Button {
                 const backoffTime = Math.pow(2, retryAttempt) * 1000;
                 this._debugLog(`Retry ${retryAttempt + 1}/${this._maxRetries} after ${backoffTime}ms`);
 
-                await new Promise(resolve => GLib.timeout_add(GLib.PRIORITY_DEFAULT, backoffTime, () => {
-                    resolve();
-                    return GLib.SOURCE_REMOVE;
-                }));
+                // Remove any existing retry timeout before creating a new one
+                if (this._retryTimeout) {
+                    GLib.source_remove(this._retryTimeout);
+                    this._retryTimeout = null;
+                }
+
+                await new Promise(resolve => {
+                    this._retryTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, backoffTime, () => {
+                        this._retryTimeout = null;
+                        resolve();
+                        return GLib.SOURCE_REMOVE;
+                    });
+                });
 
                 return await this._fetchDataWithRetry(pair, retryAttempt + 1);
             }
@@ -558,19 +574,25 @@ class Indicator extends PanelMenu.Button {
     }
 
     destroy() {
-       
+        // Remove refresh timeout
         if (this._refreshTimeout) {
             GLib.source_remove(this._refreshTimeout);
             this._refreshTimeout = null;
         }
 
-       
+        // Remove retry timeout
+        if (this._retryTimeout) {
+            GLib.source_remove(this._retryTimeout);
+            this._retryTimeout = null;
+        }
+
+        // Destroy notification source
         if (this._notificationSource) {
             this._notificationSource.destroy();
             this._notificationSource = null;
         }
 
-       
+        // Clean up tooltip
         if (this._tooltipLabel) {
             if (this._tooltipLabel.visible) {
                 Main.layoutManager.removeChrome(this._tooltipLabel);
@@ -579,7 +601,7 @@ class Indicator extends PanelMenu.Button {
             this._tooltipLabel = null;
         }
 
-       
+        // Disconnect settings signals
         if (this._settingsChangedId) {
             this._settings.disconnect(this._settingsChangedId);
         }
@@ -590,7 +612,7 @@ class Indicator extends PanelMenu.Button {
             this._settings.disconnect(this._refreshIntervalChangedId);
         }
 
-       
+        // Clear cached data
         this._cachedData.clear();
 
         super.destroy();
