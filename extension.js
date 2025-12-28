@@ -218,6 +218,14 @@ class Indicator extends PanelMenu.Button {
         this._refreshIntervalChangedId = this._settings.connect('changed::refresh-interval', () => {
             this._setupAutoRefresh();
         });
+
+        this._currencyPairChangedId = this._settings.connect('changed::currency-pair', () => {
+            const newPair = this._settings.get_string('currency-pair');
+            this._debugLog(`Currency pair changed via settings to: ${newPair}`);
+            this._currentPair = newPair;
+            this._refresh(true);
+            this._setupAutoRefresh();
+        });
     }
 
     _debugLog(message) {
@@ -277,7 +285,9 @@ class Indicator extends PanelMenu.Button {
                     const menuItem = new PopupMenu.PopupMenuItem(CURRENCY_PAIRS[pair]);
                     menuItem.connect('activate', () => {
                         this._currentPair = pair;
-                        this._refresh();
+                        this._debugLog(`Currency pair changed to: ${pair}`);
+                        this._refresh(true);
+                        this._setupAutoRefresh();
                     });
                     categorySubMenu.menu.addMenuItem(menuItem);
                 } else {
@@ -290,10 +300,10 @@ class Indicator extends PanelMenu.Button {
         
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         
-       
+
         const refreshItem = new PopupMenu.PopupMenuItem('Refresh');
         refreshItem.connect('activate', () => {
-            this._refresh();
+            this._refresh(true);
         });
         this.menu.addMenuItem(refreshItem);
 
@@ -305,11 +315,11 @@ class Indicator extends PanelMenu.Button {
         this.menu.addMenuItem(settingsItem);
     }
 
-    async _refresh() {
-       
+    async _refresh(forceRefresh = false) {
+
         const now = Date.now();
         const minInterval = 10000;
-        if (now - this._lastRefreshTime < minInterval) {
+        if (!forceRefresh && now - this._lastRefreshTime < minInterval) {
             this._debugLog('Rate limit: Refresh request ignored (too frequent)');
             return;
         }
@@ -610,6 +620,9 @@ class Indicator extends PanelMenu.Button {
         }
         if (this._refreshIntervalChangedId) {
             this._settings.disconnect(this._refreshIntervalChangedId);
+        }
+        if (this._currencyPairChangedId) {
+            this._settings.disconnect(this._currencyPairChangedId);
         }
 
         // Clear cached data
