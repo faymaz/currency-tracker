@@ -142,6 +142,7 @@ class Indicator extends PanelMenu.Button {
         this._cachedData = new Map();
         this._notificationSource = null;
         this._lastNotificationRate = 0;
+        this._activeSession = null;
         
         this._panelBox = new St.BoxLayout({
             style_class: 'panel-status-menu-box'
@@ -223,6 +224,7 @@ class Indicator extends PanelMenu.Button {
             const newPair = this._settings.get_string('currency-pair');
             this._debugLog(`Currency pair changed via settings to: ${newPair}`);
             this._currentPair = newPair;
+            this._lastKnownValue = null;  // Reset last known value for new pair
             this._refresh(true);
             this._setupAutoRefresh();
         });
@@ -285,6 +287,7 @@ class Indicator extends PanelMenu.Button {
                     const menuItem = new PopupMenu.PopupMenuItem(CURRENCY_PAIRS[pair]);
                     menuItem.connect('activate', () => {
                         this._currentPair = pair;
+                        this._lastKnownValue = null;  // Reset last known value for new pair
                         this._debugLog(`Currency pair changed to: ${pair}`);
                         this._refresh(true);
                         this._setupAutoRefresh();
@@ -316,6 +319,12 @@ class Indicator extends PanelMenu.Button {
     }
 
     async _refresh(forceRefresh = false) {
+        // Cancel any active session from previous refresh
+        if (this._activeSession) {
+            this._debugLog('Cancelling previous active session');
+            this._activeSession.abort();
+            this._activeSession = null;
+        }
 
         const now = Date.now();
         const minInterval = 10000;
@@ -511,12 +520,13 @@ class Indicator extends PanelMenu.Button {
     async _fetchData(pair) {
         let session = null;
         try {
-           
+
             const apiPair = pair.replace('-', '-');
             const url = `https://economia.awesomeapi.com.br/json/last/${apiPair}`;
             this._debugLog(`Fetching from URL: ${url}`);
 
             session = new Soup.Session();
+            this._activeSession = session;  // Track active session
             session.timeout = 10;
 
             const message = Soup.Message.new('GET', url);
@@ -580,10 +590,20 @@ class Indicator extends PanelMenu.Button {
             if (session) {
                 session.abort();
             }
+            // Clear active session reference if it's the same session
+            if (this._activeSession === session) {
+                this._activeSession = null;
+            }
         }
     }
 
     destroy() {
+        // Cancel any active session
+        if (this._activeSession) {
+            this._activeSession.abort();
+            this._activeSession = null;
+        }
+
         // Remove refresh timeout
         if (this._refreshTimeout) {
             GLib.source_remove(this._refreshTimeout);
