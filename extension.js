@@ -213,7 +213,8 @@ class Indicator extends PanelMenu.Button {
         });
 
         this._percentageChangedId = this._settings.connect('changed::show-percentage-change', () => {
-            this._refresh();
+            this._debugLog('Show percentage change setting toggled');
+            this._refresh(true);  // Force immediate refresh to show/hide percentage
         });
 
         this._refreshIntervalChangedId = this._settings.connect('changed::refresh-interval', () => {
