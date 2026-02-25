@@ -1,17 +1,12 @@
 {
-    "categories": [
-      "system-monitor",
-      "status-indicators"
-    ],
+    "name": "Currency Tracker",
     "description": "Track multiple currency pairs including cryptocurrencies. This extension uses awesomeapi.com.br services for currency rate data.",
     "donations": {
     "buymeacoffee": "fethiaymazb",
     "github": "faymaz"
     },
     "gettext-domain": "currency-tracker",
-    "stylesheet": "stylesheet.css",
     "icon": "icons/icon.svg",
-    "name": "Currency Tracker",
     "settings-schema": "org.gnome.shell.extensions.currency-tracker",
     "shell-version": [
       "45",
@@ -22,5 +17,5 @@
     ],
     "url": "https://github.com/faymaz/currency-tracker",
     "uuid": "currency-tracker@faymaz.github.com",
-    "version": 7
+    "version": 15
   }
