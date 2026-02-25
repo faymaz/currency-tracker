@@ -11,6 +11,7 @@ const CURRENCY_PAIRS = {
     'USD-GBP': 'USD/GBP',
     'USD-CNY': 'USD/CNY',
     'USD-TRY': 'USD/TRY',
+    'USD-ARS': 'USD/ARS',
     'EUR-USD': 'EUR/USD',
     'EUR-GBP': 'EUR/GBP',
     'EUR-CNY': 'EUR/CNY',
@@ -25,7 +26,19 @@ const CURRENCY_PAIRS = {
     'BTC-EUR': 'BTC/EUR',
     'BTC-GBP': 'BTC/GBP',
     'BTC-USD': 'BTC/USD',
-    'BTC-CNY': 'BTC/CNY'
+    'BTC-CNY': 'BTC/CNY',
+    // Kaspa - via CoinGecko
+    'KAS-USD': 'KAS/USD',
+    'KAS-EUR': 'KAS/EUR',
+    'KAS-TRY': 'KAS/TRY',
+    // Argentine Dollar types - via dolarapi.com
+    'USD-ARS-OFICIAL':   'USD/ARS (Oficial)',
+    'USD-ARS-BLUE':      'USD/ARS (Blue)',
+    'USD-ARS-BOLSA':     'USD/ARS (Bolsa)',
+    'USD-ARS-CCL':       'USD/ARS (CCL)',
+    'USD-ARS-TARJETA':   'USD/ARS (Tarjeta)',
+    'USD-ARS-CRIPTO':    'USD/ARS (Cripto)',
+    'USD-ARS-MAYORISTA': 'USD/ARS (Mayorista)',
 };
 
 const CURRENCY_CATEGORIES = {
@@ -33,7 +46,9 @@ const CURRENCY_CATEGORIES = {
     'EUR Pairs': ['EUR-USD', 'EUR-GBP', 'EUR-CNY', 'EUR-TRY'],
     'CNY Pairs': ['CNY-USD', 'CNY-EUR', 'CNY-GBP', 'CNY-TRY'],
     'TRY Pairs': ['USD-TRY', 'EUR-TRY', 'GBP-TRY', 'CNY-TRY'],
-    'Bitcoin': ['BTC-USD', 'BTC-EUR', 'BTC-GBP', 'BTC-TRY', 'BTC-CNY']
+    'Bitcoin': ['BTC-USD', 'BTC-EUR', 'BTC-GBP', 'BTC-TRY', 'BTC-CNY'],
+    'Kaspa (KAS)': ['KAS-USD', 'KAS-EUR', 'KAS-TRY'],
+    'ARS Dolar': ['USD-ARS', 'USD-ARS-OFICIAL', 'USD-ARS-BLUE', 'USD-ARS-BOLSA', 'USD-ARS-CCL', 'USD-ARS-TARJETA', 'USD-ARS-CRIPTO', 'USD-ARS-MAYORISTA'],
 };
 
 export default class CurrencyTrackerPreferences extends ExtensionPreferences {
@@ -129,7 +144,20 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
 
         displayGroup.add(showIconSwitch);
 
-       
+        // Sparkline chart toggle
+        const showSparklineSwitch = new Adw.SwitchRow({
+            title: 'Show Sparkline Chart',
+            subtitle: 'Display 24-hour price trend in popup menu'
+        });
+
+        showSparklineSwitch.set_active(settings.get_boolean('show-sparkline'));
+        showSparklineSwitch.connect('notify::active', widget => {
+            settings.set_boolean('show-sparkline', widget.active);
+        });
+
+        displayGroup.add(showSparklineSwitch);
+
+
         const advancedGroup = new Adw.PreferencesGroup({
             title: 'Advanced Settings',
             description: 'Configure advanced options'

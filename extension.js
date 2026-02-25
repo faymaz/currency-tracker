@@ -6,6 +6,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Soup from 'gi://Soup';
 import Clutter from 'gi://Clutter';
+import Cairo from 'gi://cairo';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
@@ -79,51 +80,69 @@ const CURRENCY_PAIRS = {
     'JPY-USD': 'JPY/USD',
     'JPY-EUR': 'JPY/EUR',
 
-    // Cryptocurrencies
+    // Cryptocurrencies (via awesomeapi)
     'BTC-USD': 'BTC/USD',
     'BTC-EUR': 'BTC/EUR',
     'BTC-GBP': 'BTC/GBP',
     'BTC-JPY': 'BTC/JPY',
     'BTC-TRY': 'BTC/TRY',
     'ETH-USD': 'ETH/USD',
-    'ETH-EUR': 'ETH/EUR'
+    'ETH-EUR': 'ETH/EUR',
+
+    // Kaspa (KAS) - via CoinGecko
+    'KAS-USD': 'KAS/USD',
+    'KAS-EUR': 'KAS/EUR',
+    'KAS-TRY': 'KAS/TRY',
+
+    // Argentine Dollar types - via dolarapi.com
+    'USD-ARS-OFICIAL': 'USD/ARS (Oficial)',
+    'USD-ARS-BLUE': 'USD/ARS (Blue)',
+    'USD-ARS-BOLSA': 'USD/ARS (Bolsa)',
+    'USD-ARS-CCL': 'USD/ARS (CCL)',
+    'USD-ARS-TARJETA': 'USD/ARS (Tarjeta)',
+    'USD-ARS-CRIPTO': 'USD/ARS (Cripto)',
+    'USD-ARS-MAYORISTA': 'USD/ARS (Mayorista)',
 };
 
 const CURRENCY_CATEGORIES = {
-    // Major currencies
-    'USD Pairs': ['USD-EUR', 'USD-GBP', 'USD-JPY', 'USD-CNY', 'USD-TRY', 'USD-CAD', 'USD-AUD', 'USD-CHF'],
-    'EUR Pairs': ['EUR-USD', 'EUR-GBP', 'EUR-JPY', 'EUR-CNY', 'EUR-TRY', 'EUR-CAD', 'EUR-AUD', 'EUR-CHF'],
-    'GBP Pairs': ['GBP-USD', 'GBP-EUR', 'GBP-JPY'],
-
-    // Asian currencies
-    'JPY Pairs': ['USD-JPY', 'EUR-JPY', 'GBP-JPY', 'JPY-USD', 'JPY-EUR'],
-    'CNY Pairs': ['USD-CNY', 'EUR-CNY', 'GBP-CNY', 'CNY-USD', 'CNY-EUR'],
-    'KRW Pairs': ['USD-KRW', 'EUR-KRW'],
-    'SGD Pairs': ['USD-SGD', 'EUR-SGD'],
-
-    // European currencies
-    'TRY Pairs': ['USD-TRY', 'EUR-TRY', 'TRY-USD', 'TRY-EUR'],
-    'CHF Pairs': ['USD-CHF', 'EUR-CHF'],
-    'SEK Pairs': ['USD-SEK', 'EUR-SEK'],
-    'NOK Pairs': ['USD-NOK', 'EUR-NOK'],
-    'DKK Pairs': ['USD-DKK', 'EUR-DKK'],
-    'RUB Pairs': ['USD-RUB', 'EUR-RUB'],
-
-    // American currencies
-    'CAD Pairs': ['USD-CAD', 'EUR-CAD'],
-    'MXN Pairs': ['USD-MXN', 'EUR-MXN', 'MXN-USD', 'MXN-EUR'],
-    'BRL Pairs': ['USD-BRL', 'EUR-BRL'],
-    'ARS Pairs': ['USD-ARS', 'EUR-ARS'],
-
-    // Other region currencies
-    'AUD Pairs': ['USD-AUD', 'EUR-AUD'],
-    'ZAR Pairs': ['USD-ZAR', 'EUR-ZAR'],
-    'INR Pairs': ['USD-INR', 'EUR-INR'],
-    'ILS Pairs': ['USD-ILS', 'EUR-ILS'],
-
+    // All USD-based pairs
+    'USD Pairs': [
+        'USD-EUR', 'USD-GBP', 'USD-JPY', 'USD-CNY', 'USD-TRY',
+        'USD-CAD', 'USD-AUD', 'USD-CHF', 'USD-MXN', 'USD-KRW',
+        'USD-ARS', 'USD-BRL', 'USD-SEK', 'USD-NOK', 'USD-DKK',
+        'USD-ZAR', 'USD-RUB', 'USD-INR', 'USD-ILS', 'USD-SGD',
+    ],
+    // All EUR-based pairs
+    'EUR Pairs': [
+        'EUR-USD', 'EUR-GBP', 'EUR-JPY', 'EUR-CNY', 'EUR-TRY',
+        'EUR-CAD', 'EUR-AUD', 'EUR-CHF', 'EUR-MXN', 'EUR-KRW',
+        'EUR-ARS', 'EUR-BRL', 'EUR-SEK', 'EUR-NOK', 'EUR-DKK',
+        'EUR-ZAR', 'EUR-RUB', 'EUR-INR', 'EUR-ILS', 'EUR-SGD',
+    ],
+    // GBP-based pairs
+    'GBP Pairs': ['GBP-USD', 'GBP-EUR', 'GBP-JPY', 'GBP-CNY', 'GBP-TRY'],
+    // Reverse/cross pairs (non-USD/EUR base)
+    'Other Fiat': ['JPY-USD', 'JPY-EUR', 'CNY-USD', 'CNY-EUR', 'TRY-USD', 'TRY-EUR', 'MXN-USD', 'MXN-EUR'],
     // Cryptocurrencies
-    'Bitcoin': ['BTC-USD', 'BTC-EUR'],
-    'Ethereum': ['ETH-USD', 'ETH-EUR'],
+    'Crypto': ['BTC-USD', 'BTC-EUR', 'BTC-GBP', 'BTC-JPY', 'BTC-TRY', 'ETH-USD', 'ETH-EUR', 'KAS-USD', 'KAS-EUR', 'KAS-TRY'],
+    // Argentine Dollar types (dolarapi.com)
+    'ARS Dolar': ['USD-ARS', 'USD-ARS-OFICIAL', 'USD-ARS-BLUE', 'USD-ARS-BOLSA', 'USD-ARS-CCL', 'USD-ARS-TARJETA', 'USD-ARS-CRIPTO', 'USD-ARS-MAYORISTA'],
+};
+
+// CoinGecko coin ID mapping for crypto pairs
+const COINGECKO_COINS = {
+    'KAS': 'kaspa',
+};
+
+// dolarapi.com "casa" mapping for ARS pair types
+const DOLARAPI_CASA_MAP = {
+    'USD-ARS-OFICIAL':   'oficial',
+    'USD-ARS-BLUE':      'blue',
+    'USD-ARS-BOLSA':     'bolsa',
+    'USD-ARS-CCL':       'contadoconliqui',
+    'USD-ARS-TARJETA':   'tarjeta',
+    'USD-ARS-CRIPTO':    'cripto',
+    'USD-ARS-MAYORISTA': 'mayorista',
 };
 
 const Indicator = GObject.registerClass(
@@ -143,7 +162,12 @@ class Indicator extends PanelMenu.Button {
         this._notificationSource = null;
         this._lastNotificationRate = 0;
         this._activeSession = null;
-        
+
+        // Sparkline historical data storage
+        this._historicalData = new Map();  // pair -> [{timestamp, rate}, ...]
+        this._maxHistoryAge = 24 * 60 * 60 * 1000;  // 24 hours in milliseconds
+        this._maxHistoryPoints = 288;  // ~5 min intervals for 24 hours
+
         this._panelBox = new St.BoxLayout({
             style_class: 'panel-status-menu-box'
         });
@@ -228,6 +252,12 @@ class Indicator extends PanelMenu.Button {
             this._lastKnownValue = null;  // Reset last known value for new pair
             this._refresh(true);
             this._setupAutoRefresh();
+            this._updateSparkline();
+        });
+
+        this._sparklineChangedId = this._settings.connect('changed::show-sparkline', () => {
+            this._debugLog('Sparkline visibility setting toggled');
+            this._updateSparklineVisibility();
         });
     }
 
@@ -277,6 +307,16 @@ class Indicator extends PanelMenu.Button {
         }
     }
 
+    _updateSparklineVisibility() {
+        if (!this._sparklineItem) {
+            return;
+        }
+
+        const shouldShow = this._settings.get_boolean('show-sparkline');
+        this._sparklineItem.visible = shouldShow;
+        this._debugLog(`Sparkline visibility: ${shouldShow}`);
+    }
+
     _buildMenu() {
         
         for (const [category, pairs] of Object.entries(CURRENCY_CATEGORIES)) {
@@ -292,6 +332,7 @@ class Indicator extends PanelMenu.Button {
                         this._debugLog(`Currency pair changed to: ${pair}`);
                         this._refresh(true);
                         this._setupAutoRefresh();
+                        this._updateSparkline();
                     });
                     categorySubMenu.menu.addMenuItem(menuItem);
                 } else {
@@ -303,7 +344,55 @@ class Indicator extends PanelMenu.Button {
         }
         
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        
+
+        // Create sparkline menu item
+        this._sparklineItem = new PopupMenu.PopupBaseMenuItem({
+            reactive: false,
+            can_focus: false
+        });
+
+        // Container box for sparkline
+        const sparklineBox = new St.BoxLayout({
+            vertical: true,
+            style_class: 'sparkline-container',
+            x_expand: true
+        });
+
+        // Title label
+        this._sparklineTitle = new St.Label({
+            text: 'Last 24 Hours',
+            style_class: 'sparkline-title',
+            x_align: Clutter.ActorAlign.START
+        });
+        sparklineBox.add_child(this._sparklineTitle);
+
+        // Drawing area for chart
+        this._sparklineCanvas = new St.DrawingArea({
+            style_class: 'sparkline-canvas',
+            x_expand: true,
+            height: 60
+        });
+
+        this._sparklineCanvas.connect('repaint', () => {
+            this._drawSparkline();
+        });
+
+        sparklineBox.add_child(this._sparklineCanvas);
+
+        // Stats label (min/max/current)
+        this._sparklineStats = new St.Label({
+            text: '',
+            style_class: 'sparkline-stats',
+            x_align: Clutter.ActorAlign.START
+        });
+        sparklineBox.add_child(this._sparklineStats);
+
+        this._sparklineItem.add_child(sparklineBox);
+
+        // Set initial visibility based on settings
+        this._sparklineItem.visible = this._settings.get_boolean('show-sparkline');
+
+        this.menu.addMenuItem(this._sparklineItem);
 
         const refreshItem = new PopupMenu.PopupMenuItem('Refresh');
         refreshItem.connect('activate', () => {
@@ -360,58 +449,30 @@ class Indicator extends PanelMenu.Button {
             this._debugLog(`API Response for ${pair}: ${text}`);
 
             const data = JSON.parse(text);
-            this._debugLog(`Parsed data: ${JSON.stringify(data)}`); 
+            this._debugLog(`API Response for ${pair}: ${JSON.stringify(data)}`);
 
+            // Parse response based on pair type (awesomeapi / CoinGecko / dolarapi)
+            const { rateRaw, pctChange } = this._parseResponse(pair, data);
+            this._debugLog(`Parsed rate: ${rateRaw}, pctChange: ${pctChange}`);
 
-           
-            const possibleKeys = [
-                pair.replace('-', ''),
-                pair.replace('-', '').toUpperCase(),
-                pair.replace('-', '').toLowerCase(),
-                pair,
-                pair.toUpperCase(),
-                pair.toLowerCase()
-            ];
+            this._cachedData.set(pair, { rateRaw, pctChange, timestamp: Date.now() });
 
-            let currencyData = null;
-            let usedKey = null;
+            // Store in historical data for sparkline
+            this._updateHistoricalData(pair, rateRaw);
 
-            for (const key of possibleKeys) {
-                if (data[key]) {
-                    currencyData = data[key];
-                    usedKey = key;
-                    break;
-                }
-            }
-
-            this._debugLog(`Found data with key: ${usedKey}`); 
-            
-            if (!currencyData) {
-                console.error('Available keys in response:', Object.keys(data));
-                throw new Error(`No currency data found for ${pair}. Available keys: ${Object.keys(data).join(', ')}`);
-            }
-
-           
-            this._cachedData.set(pair, {data: currencyData, timestamp: Date.now()});
-
-           
-            const rateRaw = parseFloat(currencyData.bid || currencyData.ask || currencyData.high || 0);
             const decimalPlaces = this._settings.get_int('decimal-places');
             const rate = rateRaw > 0 ? rateRaw.toFixed(decimalPlaces) : 'N/A';
             let displayText = `${CURRENCY_PAIRS[pair]}: ${rate}`;
 
-           
             this._checkNotificationThreshold(pair, rateRaw);
 
-           
             let styleClass = 'currency-neutral';
-            if (this._settings.get_boolean('show-percentage-change') && currencyData.pctChange) {
-                const change = parseFloat(currencyData.pctChange);
+            if (this._settings.get_boolean('show-percentage-change') && pctChange) {
+                const change = parseFloat(pctChange);
                 const arrow = change >= 0 ? '↑' : '↓';
                 const changeText = change >= 0 ? `+${change}%` : `${change}%`;
                 displayText += ` ${arrow}${changeText}`;
 
-               
                 styleClass = change >= 0 ? 'currency-positive' : 'currency-negative';
             }
 
@@ -438,6 +499,163 @@ class Indicator extends PanelMenu.Button {
             }
 
             this._debugLog(`Refresh error: ${error.message}`);
+        }
+    }
+
+    _updateHistoricalData(pair, rate) {
+        if (!this._historicalData.has(pair)) {
+            this._historicalData.set(pair, []);
+        }
+
+        const history = this._historicalData.get(pair);
+        const now = Date.now();
+
+        // Add new data point
+        history.push({
+            timestamp: now,
+            rate: rate
+        });
+
+        // Remove points older than 24 hours
+        const cutoffTime = now - this._maxHistoryAge;
+        const filtered = history.filter(point => point.timestamp >= cutoffTime);
+
+        // Limit to max points (keep most recent if exceeded)
+        if (filtered.length > this._maxHistoryPoints) {
+            filtered.splice(0, filtered.length - this._maxHistoryPoints);
+        }
+
+        this._historicalData.set(pair, filtered);
+
+        this._debugLog(`Historical data for ${pair}: ${filtered.length} points`);
+
+        // Update sparkline if it exists and is visible
+        if (this._sparklineItem && this._settings.get_boolean('show-sparkline')) {
+            this._updateSparkline();
+        }
+    }
+
+    _drawSparkline() {
+        if (!this._sparklineCanvas) {
+            return;
+        }
+
+        const pair = this._currentPair || this._settings.get_string('currency-pair');
+        const history = this._historicalData.get(pair);
+
+        // Edge case: no data or insufficient data
+        if (!history || history.length < 2) {
+            this._drawNoDataMessage();
+            return;
+        }
+
+        const [width, height] = this._sparklineCanvas.get_surface_size();
+        const cr = this._sparklineCanvas.get_context();
+
+        // Clear canvas
+        cr.setOperator(Cairo.Operator.CLEAR);
+        cr.paint();
+        cr.setOperator(Cairo.Operator.OVER);
+
+        // Extract rates and calculate bounds
+        const rates = history.map(p => p.rate);
+        const minRate = Math.min(...rates);
+        const maxRate = Math.max(...rates);
+        const range = maxRate - minRate;
+
+        // Edge case: flat line (no change)
+        const effectiveRange = range > 0 ? range : minRate * 0.01; // 1% of value
+
+        // Padding
+        const paddingX = 10;
+        const paddingY = 10;
+        const chartWidth = width - 2 * paddingX;
+        const chartHeight = height - 2 * paddingY;
+
+        // Map data points to canvas coordinates
+        const points = history.map((point, index) => {
+            const x = paddingX + (index / (history.length - 1)) * chartWidth;
+            const normalized = (point.rate - minRate) / effectiveRange;
+            const y = paddingY + chartHeight - (normalized * chartHeight);
+            return {x, y};
+        });
+
+        // Determine line color based on trend
+        const firstRate = rates[0];
+        const lastRate = rates[rates.length - 1];
+        const percentChange = ((lastRate - firstRate) / firstRate) * 100;
+
+        let color;
+        if (percentChange > 0.1) {
+            color = [0.29, 0.87, 0.50]; // Green (#4ade80)
+        } else if (percentChange < -0.1) {
+            color = [0.97, 0.44, 0.44]; // Red (#f87171)
+        } else {
+            color = [0.60, 0.60, 0.60]; // Neutral gray
+        }
+
+        // Draw area fill with gradient
+        const gradient = new Cairo.LinearGradient(0, paddingY, 0, height - paddingY);
+        gradient.addColorStopRGBA(0, color[0], color[1], color[2], 0.3);
+        gradient.addColorStopRGBA(1, color[0], color[1], color[2], 0.05);
+
+        cr.moveTo(points[0].x, height - paddingY);
+        points.forEach(p => cr.lineTo(p.x, p.y));
+        cr.lineTo(points[points.length - 1].x, height - paddingY);
+        cr.closePath();
+        cr.setSource(gradient);
+        cr.fill();
+
+        // Draw line
+        cr.setSourceRGBA(color[0], color[1], color[2], 1.0);
+        cr.setLineWidth(2);
+        cr.setLineCap(Cairo.LineCap.ROUND);
+        cr.setLineJoin(Cairo.LineJoin.ROUND);
+
+        cr.moveTo(points[0].x, points[0].y);
+        points.forEach(p => cr.lineTo(p.x, p.y));
+        cr.stroke();
+
+        // Update stats label
+        const decimalPlaces = this._settings.get_int('decimal-places');
+        this._sparklineStats.text =
+            `Min: ${minRate.toFixed(decimalPlaces)} | ` +
+            `Max: ${maxRate.toFixed(decimalPlaces)} | ` +
+            `Change: ${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`;
+
+        cr.$dispose();
+    }
+
+    _drawNoDataMessage() {
+        const [width, height] = this._sparklineCanvas.get_surface_size();
+        const cr = this._sparklineCanvas.get_context();
+
+        // Clear canvas
+        cr.setOperator(Cairo.Operator.CLEAR);
+        cr.paint();
+        cr.setOperator(Cairo.Operator.OVER);
+
+        // Draw "No data" message
+        cr.setSourceRGBA(0.6, 0.6, 0.6, 1.0);
+        cr.setFontSize(12);
+        cr.selectFontFace('Sans', Cairo.FontSlant.NORMAL, Cairo.FontWeight.NORMAL);
+
+        const text = 'Collecting data...';
+        const extents = cr.textExtents(text);
+        const x = (width - extents.width) / 2;
+        const y = (height + extents.height) / 2;
+
+        cr.moveTo(x, y);
+        cr.showText(text);
+
+        this._sparklineStats.text = 'Waiting for historical data';
+
+        cr.$dispose();
+    }
+
+    _updateSparkline() {
+        if (this._sparklineCanvas) {
+            this._sparklineCanvas.queue_repaint();
         }
     }
 
@@ -518,12 +736,86 @@ class Indicator extends PanelMenu.Button {
         }
     }
 
+    _getApiUrl(pair) {
+        const fromCurrency = pair.split('-')[0];
+
+        if (COINGECKO_COINS[fromCurrency]) {
+            const toCurrency = pair.split('-')[1].toLowerCase();
+            const coinId = COINGECKO_COINS[fromCurrency];
+            return `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${toCurrency}`;
+        }
+
+        if (pair in DOLARAPI_CASA_MAP) {
+            return 'https://dolarapi.com/v1/dolares';
+        }
+
+        return `https://economia.awesomeapi.com.br/json/last/${pair}`;
+    }
+
+    _parseResponse(pair, data) {
+        const fromCurrency = pair.split('-')[0];
+
+        // CoinGecko (KAS, and future coins)
+        if (COINGECKO_COINS[fromCurrency]) {
+            const coinId = COINGECKO_COINS[fromCurrency];
+            const toCurrency = pair.split('-')[1].toLowerCase();
+            if (!data[coinId] || data[coinId][toCurrency] === undefined) {
+                throw new Error(`No CoinGecko data for ${pair}`);
+            }
+            return {
+                rateRaw: parseFloat(data[coinId][toCurrency]),
+                pctChange: null,
+            };
+        }
+
+        // dolarapi.com (ARS types)
+        if (pair in DOLARAPI_CASA_MAP) {
+            if (!Array.isArray(data)) {
+                throw new Error('Invalid dolarapi response: expected array');
+            }
+            const casa = DOLARAPI_CASA_MAP[pair];
+            const entry = data.find(d => d.casa === casa);
+            if (!entry) {
+                throw new Error(`No dolarapi entry for casa: ${casa}`);
+            }
+            return {
+                rateRaw: parseFloat(entry.venta || entry.compra || 0),
+                pctChange: entry.variacion != null ? entry.variacion.toString() : null,
+            };
+        }
+
+        // awesomeapi (all other pairs)
+        const possibleKeys = [
+            pair.replace('-', ''),
+            pair.replace('-', '').toUpperCase(),
+            pair.replace('-', '').toLowerCase(),
+            pair,
+            pair.toUpperCase(),
+            pair.toLowerCase(),
+        ];
+
+        let currencyData = null;
+        for (const key of possibleKeys) {
+            if (data[key]) {
+                currencyData = data[key];
+                break;
+            }
+        }
+
+        if (!currencyData) {
+            throw new Error(`No currency data found for ${pair}. Available keys: ${Object.keys(data).join(', ')}`);
+        }
+
+        return {
+            rateRaw: parseFloat(currencyData.bid || currencyData.ask || currencyData.high || 0),
+            pctChange: currencyData.pctChange || null,
+        };
+    }
+
     async _fetchData(pair) {
         let session = null;
         try {
-
-            const apiPair = pair.replace('-', '-');
-            const url = `https://economia.awesomeapi.com.br/json/last/${apiPair}`;
+            const url = this._getApiUrl(pair);
             this._debugLog(`Fetching from URL: ${url}`);
 
             session = new Soup.Session();
@@ -644,6 +936,25 @@ class Indicator extends PanelMenu.Button {
         }
         if (this._currencyPairChangedId) {
             this._settings.disconnect(this._currencyPairChangedId);
+        }
+        if (this._sparklineChangedId) {
+            this._settings.disconnect(this._sparklineChangedId);
+        }
+
+        // Destroy sparkline components
+        if (this._sparklineCanvas) {
+            this._sparklineCanvas.destroy();
+            this._sparklineCanvas = null;
+        }
+        if (this._sparklineItem) {
+            this._sparklineItem.destroy();
+            this._sparklineItem = null;
+        }
+
+        // Clear historical data
+        if (this._historicalData) {
+            this._historicalData.clear();
+            this._historicalData = null;
         }
 
         // Clear cached data

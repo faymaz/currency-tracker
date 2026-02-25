@@ -56,5 +56,11 @@
       <description>Number of decimal places to display (2-4)</description>
     </key>
 
+    <key name="show-sparkline" type="b">
+      <default>true</default>
+      <summary>Show sparkline chart</summary>
+      <description>Display 24-hour price trend sparkline in popup menu</description>
+    </key>
+
   </schema>
 </schemalist>
