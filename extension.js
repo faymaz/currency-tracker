@@ -259,6 +259,15 @@ class Indicator extends PanelMenu.Button {
             this._debugLog('Sparkline visibility setting toggled');
             this._updateSparklineVisibility();
         });
+
+        // Rebuild menu when custom coin settings change
+        const rebuildOnCustomChange = () => {
+            this._debugLog('Custom coin settings changed, rebuilding menu');
+            this._rebuildMenu();
+        };
+        this._customCoinIdChangedId = this._settings.connect('changed::custom-coin-id', rebuildOnCustomChange);
+        this._customCoinSymbolChangedId = this._settings.connect('changed::custom-coin-symbol', rebuildOnCustomChange);
+        this._customCoinVsChangedId = this._settings.connect('changed::custom-coin-vs-currency', rebuildOnCustomChange);
     }
 
     _debugLog(message) {
@@ -343,6 +352,23 @@ class Indicator extends PanelMenu.Button {
             this.menu.addMenuItem(categorySubMenu);
         }
         
+        // Custom coin (if configured in preferences)
+        const customPairId = this._getCustomPairId();
+        if (customPairId) {
+            const customSubMenu = new PopupMenu.PopupSubMenuMenuItem('Custom Coin');
+            const customItem = new PopupMenu.PopupMenuItem(this._getCustomPairLabel());
+            customItem.connect('activate', () => {
+                this._currentPair = customPairId;
+                this._lastKnownValue = null;
+                this._debugLog(`Currency pair changed to custom: ${customPairId}`);
+                this._refresh(true);
+                this._setupAutoRefresh();
+                this._updateSparkline();
+            });
+            customSubMenu.menu.addMenuItem(customItem);
+            this.menu.addMenuItem(customSubMenu);
+        }
+
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         // Create sparkline menu item
@@ -408,6 +434,16 @@ class Indicator extends PanelMenu.Button {
         this.menu.addMenuItem(settingsItem);
     }
 
+    _rebuildMenu() {
+        // Null out sparkline references before removing all items
+        this._sparklineItem = null;
+        this._sparklineCanvas = null;
+        this._sparklineTitle = null;
+        this._sparklineStats = null;
+        this.menu.removeAll();
+        this._buildMenu();
+    }
+
     async _refresh(forceRefresh = false) {
         // Cancel any active session from previous refresh
         if (this._activeSession) {
@@ -462,7 +498,8 @@ class Indicator extends PanelMenu.Button {
 
             const decimalPlaces = this._settings.get_int('decimal-places');
             const rate = rateRaw > 0 ? rateRaw.toFixed(decimalPlaces) : 'N/A';
-            let displayText = `${CURRENCY_PAIRS[pair]}: ${rate}`;
+            const pairLabel = CURRENCY_PAIRS[pair] || this._getCustomPairLabel();
+            let displayText = `${pairLabel}: ${rate}`;
 
             this._checkNotificationThreshold(pair, rateRaw);
 
@@ -616,11 +653,12 @@ class Indicator extends PanelMenu.Button {
         points.forEach(p => cr.lineTo(p.x, p.y));
         cr.stroke();
 
-        // Update stats label
-        const decimalPlaces = this._settings.get_int('decimal-places');
+        // Update stats label — always use 4 decimal places so Min/Max
+        // don't appear equal when the change is in the 3rd/4th decimal place.
+        const statsDecimals = Math.max(4, this._settings.get_int('decimal-places'));
         this._sparklineStats.text =
-            `Min: ${minRate.toFixed(decimalPlaces)} | ` +
-            `Max: ${maxRate.toFixed(decimalPlaces)} | ` +
+            `Min: ${minRate.toFixed(statsDecimals)} | ` +
+            `Max: ${maxRate.toFixed(statsDecimals)} | ` +
             `Change: ${percentChange >= 0 ? '+' : ''}${percentChange.toFixed(2)}%`;
 
         cr.$dispose();
@@ -736,8 +774,28 @@ class Indicator extends PanelMenu.Button {
         }
     }
 
+    _getCustomPairId() {
+        const coinId = this._settings.get_string('custom-coin-id').trim();
+        const symbol = this._settings.get_string('custom-coin-symbol').trim();
+        if (!coinId || !symbol) return null;
+        const vs = this._settings.get_string('custom-coin-vs-currency') || 'usd';
+        return `CUSTOM-${vs.toUpperCase()}`;
+    }
+
+    _getCustomPairLabel() {
+        const symbol = this._settings.get_string('custom-coin-symbol').trim().toUpperCase();
+        const vs = this._settings.get_string('custom-coin-vs-currency').toUpperCase();
+        return `${symbol}/${vs}`;
+    }
+
     _getApiUrl(pair) {
         const fromCurrency = pair.split('-')[0];
+
+        if (pair.startsWith('CUSTOM-')) {
+            const coinId = this._settings.get_string('custom-coin-id').trim();
+            const toCurrency = pair.split('-')[1].toLowerCase();
+            return `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${toCurrency}`;
+        }
 
         if (COINGECKO_COINS[fromCurrency]) {
             const toCurrency = pair.split('-')[1].toLowerCase();
@@ -754,6 +812,19 @@ class Indicator extends PanelMenu.Button {
 
     _parseResponse(pair, data) {
         const fromCurrency = pair.split('-')[0];
+
+        // Custom coin via CoinGecko
+        if (pair.startsWith('CUSTOM-')) {
+            const coinId = this._settings.get_string('custom-coin-id').trim();
+            const toCurrency = pair.split('-')[1].toLowerCase();
+            if (!data[coinId] || data[coinId][toCurrency] === undefined) {
+                throw new Error(`No CoinGecko data for custom coin '${coinId}'`);
+            }
+            return {
+                rateRaw: parseFloat(data[coinId][toCurrency]),
+                pctChange: null,
+            };
+        }
 
         // CoinGecko (KAS, and future coins)
         if (COINGECKO_COINS[fromCurrency]) {
@@ -939,6 +1010,15 @@ class Indicator extends PanelMenu.Button {
         }
         if (this._sparklineChangedId) {
             this._settings.disconnect(this._sparklineChangedId);
+        }
+        if (this._customCoinIdChangedId) {
+            this._settings.disconnect(this._customCoinIdChangedId);
+        }
+        if (this._customCoinSymbolChangedId) {
+            this._settings.disconnect(this._customCoinSymbolChangedId);
+        }
+        if (this._customCoinVsChangedId) {
+            this._settings.disconnect(this._customCoinVsChangedId);
         }
 
         // Destroy sparkline components

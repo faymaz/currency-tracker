@@ -260,5 +260,50 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
         });
 
         customizationGroup.add(decimalPlacesRow);
+
+        // Custom Coin group
+        const customCoinGroup = new Adw.PreferencesGroup({
+            title: 'Custom Coin (CoinGecko)',
+            description: 'Track any CoinGecko coin not in the built-in list. Find coin IDs at coingecko.com.'
+        });
+        page.add(customCoinGroup);
+
+        // CoinGecko coin ID entry
+        const coinIdRow = new Adw.EntryRow({
+            title: 'CoinGecko Coin ID',
+            text: settings.get_string('custom-coin-id'),
+            show_apply_button: true,
+        });
+        coinIdRow.connect('apply', widget => {
+            settings.set_string('custom-coin-id', widget.text.trim().toLowerCase());
+        });
+        customCoinGroup.add(coinIdRow);
+
+        // Display symbol entry
+        const symbolRow = new Adw.EntryRow({
+            title: 'Display Symbol',
+            text: settings.get_string('custom-coin-symbol'),
+            show_apply_button: true,
+        });
+        symbolRow.connect('apply', widget => {
+            settings.set_string('custom-coin-symbol', widget.text.trim().toUpperCase());
+        });
+        customCoinGroup.add(symbolRow);
+
+        // Quote currency combo
+        const vsCurrencyRow = new Adw.ComboRow({
+            title: 'Quote Currency',
+            subtitle: 'Currency to price the custom coin against'
+        });
+        const vsCurrencies = ['usd', 'eur', 'try', 'gbp'];
+        const vsModel = new Gtk.StringList();
+        vsCurrencies.forEach(c => vsModel.append(c.toUpperCase()));
+        vsCurrencyRow.model = vsModel;
+        const currentVs = settings.get_string('custom-coin-vs-currency') || 'usd';
+        vsCurrencyRow.selected = Math.max(0, vsCurrencies.indexOf(currentVs));
+        vsCurrencyRow.connect('notify::selected', widget => {
+            settings.set_string('custom-coin-vs-currency', vsCurrencies[widget.selected]);
+        });
+        customCoinGroup.add(vsCurrencyRow);
     }
 }

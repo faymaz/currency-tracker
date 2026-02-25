@@ -62,5 +62,23 @@
       <description>Display 24-hour price trend sparkline in popup menu</description>
     </key>
 
+    <key name="custom-coin-id" type="s">
+      <default>''</default>
+      <summary>Custom CoinGecko coin ID</summary>
+      <description>CoinGecko coin ID for custom cryptocurrency (e.g. 'dogecoin', 'solana'). Leave empty to disable.</description>
+    </key>
+
+    <key name="custom-coin-symbol" type="s">
+      <default>''</default>
+      <summary>Custom coin display symbol</summary>
+      <description>Display symbol shown in the panel and menu (e.g. 'DOGE', 'SOL').</description>
+    </key>
+
+    <key name="custom-coin-vs-currency" type="s">
+      <default>'usd'</default>
+      <summary>Custom coin quote currency</summary>
+      <description>Quote currency for the custom coin price (usd, eur, try, gbp).</description>
+    </key>
+
   </schema>
 </schemalist>
