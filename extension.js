@@ -236,6 +236,11 @@ class Indicator extends PanelMenu.Button {
             this._updateIconVisibility();
         });
 
+        this._pairLabelChangedId = this._settings.connect('changed::show-pair-label', () => {
+            this._debugLog('Show pair label setting toggled');
+            this._refresh(true);
+        });
+
         this._percentageChangedId = this._settings.connect('changed::show-percentage-change', () => {
             this._debugLog('Show percentage change setting toggled');
             this._refresh(true);  // Force immediate refresh to show/hide percentage
@@ -499,7 +504,9 @@ class Indicator extends PanelMenu.Button {
             const decimalPlaces = this._settings.get_int('decimal-places');
             const rate = rateRaw > 0 ? rateRaw.toFixed(decimalPlaces) : 'N/A';
             const pairLabel = CURRENCY_PAIRS[pair] || this._getCustomPairLabel();
-            let displayText = `${pairLabel}: ${rate}`;
+            let displayText = this._settings.get_boolean('show-pair-label')
+                ? `${pairLabel}: ${rate}`
+                : rate;
 
             this._checkNotificationThreshold(pair, rateRaw);
 
@@ -998,6 +1005,9 @@ class Indicator extends PanelMenu.Button {
         // Disconnect settings signals
         if (this._settingsChangedId) {
             this._settings.disconnect(this._settingsChangedId);
+        }
+        if (this._pairLabelChangedId) {
+            this._settings.disconnect(this._pairLabelChangedId);
         }
         if (this._percentageChangedId) {
             this._settings.disconnect(this._percentageChangedId);

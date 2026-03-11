@@ -116,6 +116,16 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
         });
         displayGroup.add(showChangeSwitch);
 
+        const showPairLabelSwitch = new Adw.SwitchRow({
+            title: 'Show Pair Label',
+            subtitle: 'Display the pair name (e.g. GBP/TRY) before the rate',
+        });
+        showPairLabelSwitch.set_active(settings.get_boolean('show-pair-label'));
+        showPairLabelSwitch.connect('notify::active', widget => {
+            settings.set_boolean('show-pair-label', widget.active);
+        });
+        displayGroup.add(showPairLabelSwitch);
+
         const showIconSwitch = new Adw.SwitchRow({
             title: 'Show Icon',
             subtitle: 'Display the currency icon in the panel',

@@ -56,6 +56,12 @@
       <description>Number of decimal places to display (2-4)</description>
     </key>
 
+    <key name="show-pair-label" type="b">
+      <default>true</default>
+      <summary>Show pair label</summary>
+      <description>Show the currency pair name (e.g. GBP/TRY) before the rate in the panel</description>
+    </key>
+
     <key name="show-sparkline" type="b">
       <default>true</default>
       <summary>Show sparkline chart</summary>
