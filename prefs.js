@@ -223,6 +223,16 @@ export default class CurrencyTrackerPreferences extends ExtensionPreferences {
         });
         advancedPage.add(advancedGroup);
 
+        const crossRateSwitch = new Adw.SwitchRow({
+            title: 'USD Cross-Rate Fallback',
+            subtitle: 'Compute unavailable pairs via USD (e.g. GBP/TRY = GBP/USD × USD/TRY)',
+        });
+        crossRateSwitch.set_active(settings.get_boolean('usd-cross-rate-fallback'));
+        crossRateSwitch.connect('notify::active', widget => {
+            settings.set_boolean('usd-cross-rate-fallback', widget.active);
+        });
+        advancedGroup.add(crossRateSwitch);
+
         const debugSwitch = new Adw.SwitchRow({
             title: 'Enable Debug Logging',
             subtitle: 'View logs: journalctl -f -o cat /usr/bin/gnome-shell',
