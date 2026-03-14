@@ -161,7 +161,7 @@ class Indicator extends PanelMenu.Button {
         this._cachedData = new Map();
         this._notificationSource = null;
         this._lastNotificationRate = 0;
-        this._activeSession = null;
+        this._activeCancellable = null;
 
         // Sparkline historical data storage
         this._historicalData = new Map();  // pair -> [{timestamp, rate}, ...]
@@ -450,11 +450,11 @@ class Indicator extends PanelMenu.Button {
     }
 
     async _refresh(forceRefresh = false) {
-        // Cancel any active session from previous refresh
-        if (this._activeSession) {
-            this._debugLog('Cancelling previous active session');
-            this._activeSession.abort();
-            this._activeSession = null;
+        // Cancel any active request from previous refresh
+        if (this._activeCancellable) {
+            this._debugLog('Cancelling previous active request');
+            this._activeCancellable.cancel();
+            this._activeCancellable = null;
         }
 
         const now = Date.now();
@@ -749,7 +749,8 @@ class Indicator extends PanelMenu.Button {
             isTransient: true
         });
 
-        this._notificationSource.showNotification(notification);
+        // notification.show() replaces source.showNotification() from GNOME 47
+        notification.show();
         this._debugLog(`Notification sent: ${message}`);
     }
 
@@ -891,88 +892,73 @@ class Indicator extends PanelMenu.Button {
     }
 
     async _fetchData(pair) {
-        let session = null;
+        const url = this._getApiUrl(pair);
+        this._debugLog(`Fetching from URL: ${url}`);
+
+        const session = new Soup.Session();
+        session.timeout = 10;
+
+        // Use Gio.Cancellable to support request cancellation (Soup 3.0 compliant)
+        const cancellable = new Gio.Cancellable();
+        this._activeCancellable = cancellable;
+
+        const message = Soup.Message.new('GET', url);
+        if (!message)
+            throw new Error('Failed to create HTTP message. Check your internet connection.');
+
+        message.request_headers.append('User-Agent', 'Currency-Tracker-GNOME-Extension/1.0');
+
         try {
-            const url = this._getApiUrl(pair);
-            this._debugLog(`Fetching from URL: ${url}`);
-
-            session = new Soup.Session();
-            this._activeSession = session;  // Track active session
-            session.timeout = 10;
-
-            const message = Soup.Message.new('GET', url);
-
-            if (!message) {
-                throw new Error('Failed to create HTTP message. Check your internet connection.');
-            }
-
-           
-            message.request_headers.append('User-Agent', 'Currency-Tracker-GNOME-Extension/1.0');
-
             const bytes = await session.send_and_read_async(
                 message,
                 GLib.PRIORITY_DEFAULT,
-                null
+                cancellable
             );
 
-            if (!bytes) {
+            if (!bytes)
                 throw new Error('No response data received from API');
-            }
 
-           
             const statusCode = message.status_code;
             if (statusCode !== 200) {
-                let errorMsg = `HTTP ${statusCode}`;
+                let errorMsg;
                 switch (statusCode) {
-                    case 404:
-                        errorMsg = 'Currency pair not found';
-                        break;
-                    case 429:
-                        errorMsg = 'Too many requests. Please wait.';
-                        break;
+                    case 404: errorMsg = 'Currency pair not found'; break;
+                    case 429: errorMsg = 'Too many requests. Please wait.'; break;
                     case 500:
                     case 502:
-                    case 503:
-                        errorMsg = 'API server error. Try again later.';
-                        break;
-                    case 0:
-                        errorMsg = 'Network connection failed';
-                        break;
-                    default:
-                        errorMsg = `API error (${statusCode})`;
+                    case 503: errorMsg = 'API server error. Try again later.'; break;
+                    case 0: errorMsg = 'Network connection failed'; break;
+                    default: errorMsg = `API error (${statusCode})`;
                 }
                 throw new Error(errorMsg);
             }
 
             return bytes.get_data();
         } catch (error) {
-           
+            // Cancellation is not a real error — rethrow silently
+            if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                throw error;
+
             let enhancedError = error;
-            if (error.message && error.message.includes('Could not resolve host')) {
+            if (error.message && error.message.includes('Could not resolve host'))
                 enhancedError = new Error('No internet connection');
-            } else if (error.message && error.message.includes('timeout')) {
+            else if (error.message && error.message.includes('timeout'))
                 enhancedError = new Error('Request timeout. Check connection.');
-            }
 
             console.error('Fetch error for pair', pair, ':', enhancedError);
             this._debugLog(`Fetch error details: ${enhancedError.message}`);
             throw enhancedError;
         } finally {
-            if (session) {
-                session.abort();
-            }
-            // Clear active session reference if it's the same session
-            if (this._activeSession === session) {
-                this._activeSession = null;
-            }
+            if (this._activeCancellable === cancellable)
+                this._activeCancellable = null;
         }
     }
 
     destroy() {
-        // Cancel any active session
-        if (this._activeSession) {
-            this._activeSession.abort();
-            this._activeSession = null;
+        // Cancel any in-flight request
+        if (this._activeCancellable) {
+            this._activeCancellable.cancel();
+            this._activeCancellable = null;
         }
 
         // Remove refresh timeout
