@@ -69,7 +69,7 @@
     </key>
 
     <key name="usd-cross-rate-fallback" type="b">
-      <default>true</default>
+      <default>false</default>
       <summary>USD cross-rate fallback</summary>
       <description>When a currency pair is not directly available from the API, automatically compute it via USD (e.g. GBP/TRY = GBP/USD × USD/TRY)</description>
     </key>
