@@ -480,20 +480,13 @@ class Indicator extends PanelMenu.Button {
                 this._settings.set_string('currency-pair', this._currentPair);
             }
 
-            const response = await this._fetchDataWithRetry(pair);
+            let rateRaw, pctChange;
 
-            if (!response) {
-                throw new Error('No response from API');
+            if (this._needsCrossRate(pair)) {
+                ({ rateRaw, pctChange } = await this._fetchCrossRate(pair));
+            } else {
+                ({ rateRaw, pctChange } = await this._fetchAndParse(pair));
             }
-
-            const text = new TextDecoder().decode(response);
-            this._debugLog(`API Response for ${pair}: ${text}`);
-
-            const data = JSON.parse(text);
-            this._debugLog(`API Response for ${pair}: ${JSON.stringify(data)}`);
-
-            // Parse response based on pair type (awesomeapi / CoinGecko / dolarapi)
-            const { rateRaw, pctChange } = this._parseResponse(pair, data);
             this._debugLog(`Parsed rate: ${rateRaw}, pctChange: ${pctChange}`);
 
             this._cachedData.set(pair, { rateRaw, pctChange, timestamp: Date.now() });
@@ -779,6 +772,59 @@ class Indicator extends PanelMenu.Button {
                 return await this._fetchDataWithRetry(pair, retryAttempt + 1);
             }
             throw error;
+        }
+    }
+
+    _needsCrossRate(pair) {
+        if (!this._settings.get_boolean('usd-cross-rate-fallback'))
+            return false;
+        // Only applies to awesomeapi pairs (not CoinGecko, dolarapi, or custom)
+        const from = pair.split('-')[0];
+        if (pair.startsWith('CUSTOM-'))
+            return false;
+        if (COINGECKO_COINS[from])
+            return false;
+        if (pair in DOLARAPI_CASA_MAP)
+            return false;
+        // No need for cross-rate if USD is already one side
+        if (from === 'USD' || pair.split('-')[1] === 'USD')
+            return false;
+        return true;
+    }
+
+    async _fetchAndParse(pair) {
+        const response = await this._fetchDataWithRetry(pair);
+        if (!response)
+            throw new Error('No response from API');
+        const text = new TextDecoder().decode(response);
+        this._debugLog(`API Response for ${pair}: ${text}`);
+        const data = JSON.parse(text);
+        return this._parseResponse(pair, data);
+    }
+
+    async _fetchCrossRate(pair) {
+        const [from, to] = pair.split('-');
+        const leg1 = `${from}-USD`;
+        const leg2 = `USD-${to}`;
+        this._debugLog(`Cross-rate for ${pair}: ${leg1} × ${leg2}`);
+
+        try {
+            const [parsed1, parsed2] = await Promise.all([
+                this._fetchAndParse(leg1),
+                this._fetchAndParse(leg2),
+            ]);
+
+            const rateRaw = parsed1.rateRaw * parsed2.rateRaw;
+            const pctChange = (parsed1.pctChange && parsed2.pctChange)
+                ? (parseFloat(parsed1.pctChange) + parseFloat(parsed2.pctChange)).toFixed(2)
+                : parsed1.pctChange || parsed2.pctChange || null;
+
+            this._debugLog(`Cross-rate result: ${parsed1.rateRaw} × ${parsed2.rateRaw} = ${rateRaw}`);
+            return { rateRaw, pctChange };
+        } catch (error) {
+            // If cross-rate fails, fall back to direct fetch
+            this._debugLog(`Cross-rate failed for ${pair}, trying direct: ${error.message}`);
+            return await this._fetchAndParse(pair);
         }
     }
 
